@@ -25,7 +25,22 @@ Suggested command mapping:
 - `/tom` for `tom-core`
 - `/jerry` for `jerry-core`
 - `/receipt` for `receipt-jerry`
+- `/tomnjerry` to trigger a global pre-flight opportunity scan (`jerry-core` + specialized scans)
 - `/delete-jerry`, `/framework-jerry`, `/unix-jerry`, `/git-jerry`, `/browser-jerry`, `/dependency-jerry`, `/db-jerry`, `/api-jerry`, `/trap-jerry`, `/test-jerry` for narrower scans
+
+## Harness Slash Command Configuration
+
+### 1. Claude Code
+You can map `/tomnjerry` by adding project instructions in your local configuration. Tell Claude:
+> "Whenever `/tomnjerry` is invoked, load `skills/jerry-core/SKILL.md`, run an opportunity scan on the current candidate move, and output the resulting Opportunity Cards."
+
+### 2. Cursor (via `.cursorrules`)
+Add the following rule to your `.cursorrules` file to support the shortcut:
+> "When the user types `/tomnjerry` or asks to check a move, pause, read `skills/jerry-core/SKILL.md`, and scan the codebase for reusable structures before proceeding."
+
+### 3. Custom Harnesses
+Intercept incoming prompt strings. If the input contains the token `/tomnjerry`, prep the prompt with the contents of `skills/jerry-core/SKILL.md` as system context, execute the scan, and return the Opportunity Cards to the user interface.
+
 
 ## opencode & Dynamic Loading
 
