@@ -1,6 +1,7 @@
 # Contributing
 
-Street Smart Skills grows by adding narrow behavioral primitives.
+Tom n Jerry grows by adding narrow behavioral primitives.
+
 
 Each new skill should make agents notice a specific class of opportunity before they build.
 

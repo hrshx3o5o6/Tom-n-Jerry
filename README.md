@@ -1,6 +1,7 @@
-# Street Smart Skills
+# Tom n Jerry
 
-Street Smart Skills is a portable skill pack that gives coding agents an opportunity detection layer.
+Tom n Jerry is a portable skill pack that gives coding agents an opportunity detection layer.
+
 
 Before your agent writes code, it looks for cheaper moves: reuse existing code, use native platform features, mine git history, delete unnecessary abstractions, and verify the result with receipts.
 

@@ -1,6 +1,7 @@
 # Design Principles
 
-Street Smart Skills gives coding agents opportunistic engineering instincts.
+Tom n Jerry gives coding agents opportunistic engineering instincts.
+
 
 The project starts as readable Markdown because the first goal is portability, not orchestration.
 

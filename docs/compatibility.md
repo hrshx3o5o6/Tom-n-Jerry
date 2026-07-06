@@ -1,6 +1,7 @@
 # Compatibility
 
-Street Smart Skills is designed to travel across coding agents.
+Tom n Jerry is designed to travel across coding agents.
+
 
 The repository does not require a runtime. Each `SKILL.md` file can be copied, adapted, or referenced by the host tool.
 
