@@ -30,16 +30,20 @@ Suggested command mapping:
 
 ## Harness Slash Command Configuration
 
+To simplify setup, pre-made configuration templates are provided in the `templates/` directory.
+
 ### 1. Claude Code
-You can map `/tomnjerry` by adding project instructions in your local configuration. Tell Claude:
-> "Whenever `/tomnjerry` is invoked, load `skills/jerry-core/SKILL.md`, run an opportunity scan on the current candidate move, and output the resulting Opportunity Cards."
+Copy `templates/claudeproj.md` to your project root (or append its contents to your project instructions config file). This maps the `/tom`, `/jerry`, `/receipt`, and `/tomnjerry` commands.
 
 ### 2. Cursor (via `.cursorrules`)
-Add the following rule to your `.cursorrules` file to support the shortcut:
-> "When the user types `/tomnjerry` or asks to check a move, pause, read `skills/jerry-core/SKILL.md`, and scan the codebase for reusable structures before proceeding."
+Copy `templates/.cursorrules` to your project root. Cursor will automatically read this file and intercept edits, prompting the model to perform the pre-flight check and verify with receipts.
 
-### 3. Custom Harnesses
+### 3. opencode
+Copy `templates/opencode.json` to your project root. This instructs opencode to recursively register the standard and custom skill patterns.
+
+### 4. Custom Harnesses
 Intercept incoming prompt strings. If the input contains the token `/tomnjerry`, prep the prompt with the contents of `skills/jerry-core/SKILL.md` as system context, execute the scan, and return the Opportunity Cards to the user interface.
+
 
 
 ## opencode & Dynamic Loading

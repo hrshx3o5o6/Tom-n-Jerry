@@ -1,0 +1,39 @@
+# Cursor Rules for Tom n Jerry
+
+You are operating inside a repository equipped with **Tom n Jerry** opportunistic engineering skills. 
+Before writing any code or executing edits, you must follow these directives.
+
+---
+
+## 1. Intercepting Candidate Moves (Jerry Scan)
+
+Whenever the user asks you to implement a change, build a component, or refactor code:
+1. **Pause planning.** Do not start writing code immediately.
+2. Read the local `skills/jerry-core/SKILL.md` file and evaluate the candidate move against active repository affordances.
+3. Check if specialized skills are relevant:
+   - Web interface: use `browser-jerry` (HTML5/native APIs first).
+   - Package install: use `dependency-jerry` (reuse dependencies).
+   - DB schemas: use `db-jerry` (scan migrations and schemas).
+   - API endpoints: use `api-jerry` (reuse routes).
+   - Complex logic: use `trap-jerry` (caching, auth, cron queue traps).
+   - Testing logic: use `test-jerry` (reuse mocks).
+   - Legacy code: use `git-jerry` (inspect history) or `delete-jerry` (subtraction).
+4. Output 1 to 3 **Opportunity Cards** using the format in `docs/opportunity-cards.md`.
+5. State your recommended **Revised Move** and wait for the user to approve or proceed.
+
+---
+
+## 2. Command Mapping
+
+- **`/tomnjerry`** or **`/jerry`**: Explicitly run an opportunity scan on the current state/plan and output Opportunity Cards.
+- **`/tom`**: Force momentum mode—break down complex goals into small, shippable candidate moves.
+- **`/receipt`**: Trigger verification mode—force proof of execution using `skills/receipt-jerry/SKILL.md` guidelines.
+
+---
+
+## 3. Post-Action Verification (Receipts)
+
+After implementing any code change or executing a command:
+1. Load `skills/receipt-jerry/SKILL.md`.
+2. Do not report "done" based on assumptions. Run a concrete command (test runner, local build, curl, git diff) to produce a receipt.
+3. Show the raw command output or verification results to the user as proof.

@@ -1,0 +1,28 @@
+{
+  "agent": {
+    "name": "opencode-tomnjerry",
+    "description": "Adaptive Tom n Jerry instruction manifest",
+    "rules": {
+      "load_paths": [
+        "skills/tom-core/SKILL.md",
+        "skills/jerry-core/SKILL.md",
+        "skills/receipt-jerry/SKILL.md",
+        "skills/delete-jerry/SKILL.md",
+        "skills/framework-jerry/SKILL.md",
+        "skills/unix-jerry/SKILL.md",
+        "skills/git-jerry/SKILL.md",
+        "skills/browser-jerry/SKILL.md",
+        "skills/dependency-jerry/SKILL.md",
+        "skills/db-jerry/SKILL.md",
+        "skills/api-jerry/SKILL.md",
+        "skills/trap-jerry/SKILL.md",
+        "skills/test-jerry/SKILL.md",
+        "skills/custom-*/SKILL.md"
+      ],
+      "directives": {
+        "preflight_scan": "Always execute a jerry-core scan and output Opportunity Cards in docs/opportunity-cards.md format before starting code modifications.",
+        "post_verification": "Always run receipt-jerry tests and output console confirmation logs before reporting completion."
+      }
+    }
+  }
+}

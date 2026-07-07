@@ -1,0 +1,27 @@
+{
+  "name": "@hrshx3o5o6/tomnjerry",
+  "version": "1.0.0",
+  "description": "Opportunistic engineering skill pack for coding agents (npx tomnjerry init)",
+  "main": "bin/tomnjerry.js",
+  "bin": {
+    "tomnjerry": "./bin/tomnjerry.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hrshx3o5o6/Tom-n-Jerry.git"
+  },
+  "keywords": [
+    "agents",
+    "skills",
+    "opportunism",
+    "prompt-engineering",
+    "cursor",
+    "claude"
+  ],
+  "author": "harsha",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hrshx3o5o6/Tom-n-Jerry/issues"
+  },
+  "homepage": "https://github.com/hrshx3o5o6/Tom-n-Jerry#readme"
+}

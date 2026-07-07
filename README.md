@@ -35,11 +35,16 @@ Early design prototype. The first release is a human-readable skill library, not
 
 ## Quick Start
 
-1. Copy the relevant `skills/*/SKILL.md` files into your agent's skill, rule, command, or instruction system.
-2. Invoke `tom-core` when the task needs a concrete next move.
-3. Invoke `jerry-core` before implementation to produce opportunity cards.
-4. Invoke specialized Jerry skills when a card points to a narrower affordance.
-5. Invoke `receipt-jerry` after action to prove the result.
+1. **Copy the Skills folder** into your target project repository:
+   ```bash
+   cp -r skills/ /path/to/your/project/
+   ```
+2. **Copy the Harness Config** for your specific agent tool from the `templates/` folder into your project root:
+   - For **Cursor**: Copy `templates/.cursorrules` to your project root.
+   - For **Claude Code**: Copy `templates/claudeproj.md` to your project root (or append it to your project configuration instructions).
+   - For **opencode**: Copy `templates/opencode.json` to your project root.
+3. Start prompting your agent with `/tomnjerry` or `/jerry` to run opportunity checks, and `/receipt` to enforce verification!
+
 
 ## Agent Compatibility
 
