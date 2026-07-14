@@ -4,8 +4,13 @@
   "description": "Opportunistic engineering skill pack for coding agents (npx tomnjerry init)",
   "main": "bin/tomnjerry.js",
   "bin": {
-    "tomnjerry": "./bin/tomnjerry.js"
+    "tomnjerry": "bin/tomnjerry.js"
   },
+  "files": [
+    "bin",
+    "skills",
+    "templates"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hrshx3o5o6/Tom-n-Jerry.git"
