@@ -1,9 +1,17 @@
-# 🐱 Tom n Jerry
+<p align="center">
+  <img src="tomnjerry.png" alt="Tom n Jerry Logo" width="300" />
+</p>
 
-### Tom builds a system. Jerry finds the shortcut. It works.
+<h1 align="center">Tom n Jerry</h1>
 
-[![npm version](https://img.shields.io/npm/v/@hrshx3o5o6/tomnjerry.svg?style=flat-flat&color=black)](https://www.npmjs.com/package/@hrshx3o5o6/tomnjerry)
-[![GitHub stars](https://img.shields.io/github/stars/hrshx3o5o6/Tom-n-Jerry.svg?style=flat-square&color=black)](https://github.com/hrshx3o5o6/Tom-n-Jerry)
+<p align="center">
+  <i>Tom finds a solution. Jerry finds a shortcut.</i>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@hrshx3o5o6/tomnjerry"><img src="https://img.shields.io/npm/v/@hrshx3o5o6/tomnjerry.svg?style=flat-flat&color=black" alt="npm version" /></a>
+  <a href="https://github.com/hrshx3o5o6/Tom-n-Jerry"><img src="https://img.shields.io/github/stars/hrshx3o5o6/Tom-n-Jerry.svg?style=flat-square&color=black" alt="GitHub stars" /></a>
+</p>
 
 **Tom n Jerry** is a portable, agent-agnostic **opportunity detection layer** for your AI coding agents (Claude Code, Cursor, Aider, opencode). 
 
