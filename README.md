@@ -1,6 +1,6 @@
 # 🐱 Tom n Jerry
 
-### Tom writes 300 lines of code. Jerry intercepts him, deletes it, and uses a single native platform line. It works.
+### Tom builds a system. Jerry writes one line. It works.
 
 [![npm version](https://img.shields.io/npm/v/@hrshx3o5o6/tomnjerry.svg?style=flat-flat&color=black)](https://www.npmjs.com/package/@hrshx3o5o6/tomnjerry)
 [![GitHub stars](https://img.shields.io/github/stars/hrshx3o5o6/Tom-n-Jerry.svg?style=flat-square&color=black)](https://github.com/hrshx3o5o6/Tom-n-Jerry)
