@@ -1,14 +1,13 @@
 # 🐱 Tom n Jerry
 
-### Stop your AI coding agents from building what already exists.
+### Tom writes 300 lines of code. Jerry intercepts him, deletes it, and uses a single native platform line. It works.
 
 [![npm version](https://img.shields.io/npm/v/@hrshx3o5o6/tomnjerry.svg?style=flat-flat&color=black)](https://www.npmjs.com/package/@hrshx3o5o6/tomnjerry)
 [![GitHub stars](https://img.shields.io/github/stars/hrshx3o5o6/Tom-n-Jerry.svg?style=flat-square&color=black)](https://github.com/hrshx3o5o6/Tom-n-Jerry)
-[![License](https://img.shields.io/github/license/hrshx3o5o6/Tom-n-Jerry.svg?style=flat-square&color=black)](https://github.com/hrshx3o5o6/Tom-n-Jerry/blob/main/LICENSE)
 
-**Tom n Jerry** is a portable, agent-agnostic **opportunity detection layer** for AI engineers. 
+**Tom n Jerry** is a portable, agent-agnostic **opportunity detection layer** for your AI coding agents (Claude Code, Cursor, Aider, opencode). 
 
-Before your agent (Claude Code, Cursor, Aider, opencode) writes a single line of new code, Tom n Jerry intercepts the plan and forces it to look for the cheapest environmental move: reuse existing code, leverage framework conventions, utilize native Web APIs, mine git history, or delete work entirely.
+It stops your agent from brute-forcing code abstractions and forces it to behave like a lazy, street-smart senior developer.
 
 ```bash
 npx @hrshx3o5o6/tomnjerry init
@@ -16,87 +15,45 @@ npx @hrshx3o5o6/tomnjerry init
 
 ---
 
-## The Problem: The "Brute-Force Abstraction" Trap
+## The Analogy
 
-LLMs are highly intelligent, but they lack **street smarts**.
+### 🐱 Tom: The Eager Junior
+Tom is your AI coding agent's default planning mode. Eager to please, highly energetic, and completely devoid of street smarts. 
 
-When you ask a state-of-the-art coding agent to add a feature, its default instinct is to *build*. It starts creating custom modules, utility wrappers, and new package dependencies because it treats code generation as its primary metric of success.
+When you ask Tom to add a simple feature, he immediately starts:
+* Designing custom React state managers.
+* Writing bespoke timezone parsers.
+* Adding new, unverified npm dependencies.
+* Creating complex helper wrappers.
 
-You end up with:
-* A custom React state machine wrapper when a native HTML5 `<dialog>` would have sufficed.
-* A hand-rolled timezone manipulation script when the codebase already imported a utility helper.
-* A new database migration adding redundant tables when a JSONB field was already configured.
-* A custom JSON log-parser when a single piped `jq` script solved the issue in seconds.
+Tom thinks writing more code makes him look smart.
+
+### 🐭 Jerry: The Street-Smart Mouse
+Jerry is the intervention layer. He intercepts Tom's massive 300-line implementation plan, looks at the environment, and finds the cheap shortcut.
+
+Jerry points to:
+* The native browser API that already does it.
+* The utility library already installed in your lockfile.
+* The single-line database field already configured.
+* The git commit that deleted this exact feature three weeks ago.
+
+Jerry deletes Tom's work, writes one line, and runs a test to prove it works.
 
 ---
 
-## The Solution: Momentum + Opportunism + Receipts
-
-Tom n Jerry structures your agent's reasoning loop into a balance of momentum, skepticism, and proof:
+## How It Works: The Loop
 
 ```
-                  [ Vague User Request ]
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │  TOM (Momentum)                                        │
- │  Proposes the next plausible Candidate Move.           │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │  JERRY (Skepticism / Scan)                              │
- │  Intercepts the move. Scans the workspace.             │
- │  Emits 1-3 Opportunity Cards showing a cheaper path.   │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │  RECEIPT (Verification)                                │
- │  Executes the revised move and forces objective proof  │
- │  (unit tests, visual diffs, curl checks).              │
- └────────────────────────────────────────────────────────┘
+[User Request] ─► 🐱 Tom plans 300 LOC ─► 🐭 Jerry intercepts ─► [One-Line Move] ─► 🧾 Receipt verifies
 ```
 
----
+Whenever you ask your agent to build something, Jerry intercepts the plan and outputs an **Opportunity Card**:
 
-## How It Works: The Opportunity Card
-
-Instead of long-winded planning essays, Jerry skills output strict, actionable **Opportunity Cards**:
-
-* **Type:** `native` | `reuse` | `delete` | `shell` | `history` | `dependency` | `trap` | `receipt`
-* **Claim:** The specific shortcut noticed in the codebase.
-* **Evidence:** File paths, package versions, database models, or git commits.
-* **Move:** The revised, lightweight engineering action.
-* **Risk:** Potential edge cases or trade-offs.
-* **Receipt:** The exact terminal command or test target to prove success.
-
-### Real Example: Adding Dark Mode
-* **Naive Agent Plan:** Build a custom `ThemeContext`, context provider, local storage sync helper, and CSS class variables.
-* **Jerry Interception:**
-  * **Type:** `native`
-  * **Claim:** Tailwind CSS configuration already supports class-based dark mode.
-  * **Evidence:** `tailwind.config.js` exists; components already use `dark:` utilities.
-  - **Move:** Enable the theme class config and write a simple theme-toggle button.
-  - **Receipt:** Inspect UI rendering using a browser screenshot.
-
----
-
-## Out-of-the-Box Skills
-
-Tom n Jerry comes pre-configured with 11 specialized Jerry sub-skills covering all development layers:
-
-| Skill | Opportunity Target | Bypasses... |
-| :--- | :--- | :--- |
-| [`browser-jerry`](skills/browser-jerry/SKILL.md) | Native Browser/Web APIs (`popover`, `dialog`, validation) | Heavy third-party React/Vue component libraries |
-| [`dependency-jerry`](skills/dependency-jerry/SKILL.md) | Existing workspace lockfiles (`package.json`, `poetry.lock`) | Unnecessary `npm install` and `pip install` overhead |
-| [`db-jerry`](skills/db-jerry/SKILL.md) | Database schemas, ORM models, indexes | Redundant migrations and duplicate data columns |
-| [`api-jerry`](skills/api-jerry/SKILL.md) | Active route registrations and API serializers | Endpoint and route handler duplication |
-| [`trap-jerry`](skills/trap-jerry/SKILL.md) | Audited standard library helpers | Building custom auth, local cache syncs, or custom queues |
-| [`test-jerry`](skills/test-jerry/SKILL.md) | Existing mock factories, test fixtures, and setups | Writing redundant test mock boilerplates |
-| [`delete-jerry`](skills/delete-jerry/SKILL.md) | Dead branches, obsolete code, bloated conditions | Creating patches to work around zombie code |
-| [`unix-jerry`](skills/unix-jerry/SKILL.md) | Shell utilities (`rg`, `awk`, `sed`, `jq`, `find`) | Writing custom JavaScript/Python scripts |
-| [`git-jerry`](skills/git-jerry/SKILL.md) | Deleted features or patterns in git commit history | Rebuilding code that previously existed |
+* **Type:** `native`
+* **Claim:** Tailwind already supports class-based dark mode.
+* **Evidence:** `tailwind.config.js` exists and contains dark theme variables.
+* **Move:** Delete the custom Context Provider. Use the existing classes.
+* **Receipt:** `npm run build && verify-screenshot`
 
 ---
 
@@ -105,48 +62,38 @@ Tom n Jerry comes pre-configured with 11 specialized Jerry sub-skills covering a
 Get Tom n Jerry running in your repository immediately.
 
 ### 1. Initialize inside your project root
-Run the initialization script inside your target project directory:
 ```bash
 npx @hrshx3o5o6/tomnjerry init
 ```
-This script copies the `skills/` library locally and automatically deploys configuration templates targeting **Cursor** (`.cursorrules`), **Claude Code** (`claudeproj.md`), and **opencode** (`opencode.json`).
+This copies the `skills/` library locally and deploys config files for **Cursor** (`.cursorrules`), **Claude Code** (`claudeproj.md`), and **opencode** (`opencode.json`).
 
 ### 2. Invoke inside your Agent
 Once initialized, trigger the coordinator loop by referencing it in your agent prompt:
 * **Cursor / Claude Code / opencode:**
   > `/tomnjerry Add [your goal]`
-* **Manual Prompt Injection:**
+* **Manual Prompt:**
   If your agent doesn't support local commands, paste the combined rules from `templates/tomnjerry-combined.rules` directly into your system prompt.
 
 ---
 
-## 🔮 Dynamic Self-Adaptation
+## The Skills in the Box
 
-**Tom n Jerry adapts to your workspace.**
+Tom n Jerry comes pre-configured with specialized Jerry sub-skills:
 
-If `jerry-core` detects you are building in a codebase domain not covered by the default 11 specialized skills (for example, a Swift iOS app, a Unity 3D C# codebase, or a Terraform cloud infrastructure pipeline), it automatically executes a self-generation sequence:
-
-1. It identifies repetitive boilerplate configurations unique to the workspace's stack.
-2. It writes a custom, local skill file under `skills/custom-<domain-name>/SKILL.md` following our robust execution template.
-3. It registers the rules. Future runs in the codebase automatically trigger the newly synthesized custom Jerry.
-
----
-
-## Verification & Outcomes
-
-We benchmarked Tom n Jerry against baseline agents across 3 common development tasks:
-
-| Metric | Baseline Agent | Tom n Jerry Agent | Benefit |
-| :--- | :--- | :--- | :--- |
-| **New Lines of Code** | ~120 lines (custom parsing) | **0 lines** (reused `jq` script) | **100% reduction** in code bloat |
-| **New Packages Installed** | 1 package (`date-fns`) | **0 packages** (reused standard API) | Zero security dependency risk |
-| **Build verification** | Assumed success | **Verified** (passed narrow `receipt`) | Guaranteed correctness |
+* [**`browser-jerry`**](skills/browser-jerry/SKILL.md) — Uses native Web APIs (`popover`, `dialog`) instead of adding heavy JS libraries.
+* [**`dependency-jerry`**](skills/dependency-jerry/SKILL.md) — Scans lockfiles to reuse packages instead of running new installs.
+* [**`db-jerry`**](skills/db-jerry/SKILL.md) — Checks active database schemas to prevent duplicate fields and tables.
+* [**`api-jerry`**](skills/api-jerry/SKILL.md) — Reuses route serializers instead of bloating endpoints.
+* [**`delete-jerry`**](skills/delete-jerry/SKILL.md) — Solves bugs by deleting zombie code instead of writing patches.
+* [**`unix-jerry`**](skills/unix-jerry/SKILL.md) — Uses a single shell command instead of custom Node/Python scripts.
+* [**`git-jerry`**](skills/git-jerry/SKILL.md) — Restores previously deleted features from commit logs instead of rebuilding.
+* [**`trap-jerry`**](skills/trap-jerry/SKILL.md) — Identifies complex traps (custom auth, caches) and redirects to standard libraries.
 
 ---
 
 ## Contributing
 
-We welcome additions of narrow, evidence-seeking, receipt-driven Jerry skills. Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) to see how to format new custom skills.
+Add a new Jerry skill only when it represents a distinct, street-smart behavioral shortcut. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 
