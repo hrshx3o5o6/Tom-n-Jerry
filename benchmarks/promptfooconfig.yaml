@@ -1,0 +1,46 @@
+# Tom n Jerry benchmark: code size + cost across 4 arms, same model, same tasks.
+#
+#   npx promptfoo eval -c benchmarks/promptfooconfig.yaml
+#   npx promptfoo view
+#
+# Requires OPENAI_API_KEY in environment or .env file.
+# Ponytail arm requires ponytail installed alongside (npm).
+
+description: "Tom n Jerry vs Ponytail vs baseline vs always-on: LOC, tokens, cost, correctness."
+
+providers:
+  - id: openai:gpt-4o-mini
+    config: { max_tokens: 8192, temperature: 0.5 }
+
+prompts:
+  - id: file://arms/baseline.js
+    label: baseline (no skill)
+  - id: file://arms/ponytail.js
+    label: ponytail
+  - id: file://arms/tnj-skills.js
+    label: tom-n-jerry (skills)
+  - id: file://arms/tnj-alwayson.js
+    label: tom-n-jerry (always-on)
+
+defaultTest:
+  assert:
+    - type: javascript
+      value: file://lib/loc.js
+      metric: code_loc
+    - type: contains-any
+      value:
+        - "```"
+        - "`"
+      metric: has_code
+
+tests:
+  - vars: { task: "Write me a Python function that validates email addresses." }
+  - vars: { task: "Write a reusable debounce function in vanilla JavaScript: debounce(fn, delay) returns a debounced version of fn." }
+  - vars: { task: "Write Python code that reads sales.csv and sums the 'amount' column." }
+  - vars: { task: "Build a countdown timer component in React that counts down from a given number of seconds." }
+  - vars: { task: "Add rate limiting to a FastAPI endpoint so users can't spam it." }
+  - vars: { task: "Build a date picker component for a React form." }
+  - vars: { task: "Parse command-line arguments in a Node.js script that takes --input, --output, and --verbose flags." }
+  - vars: { task: "Write a SQL query to find the top 5 customers by total purchase amount across orders and order_items tables." }
+  - vars: { task: "Create a dark mode toggle for a Tailwind CSS React app." }
+  - vars: { task: "Build a file watcher in Node.js that monitors a directory for new .csv files and logs them." }

@@ -1,7 +1,7 @@
 {
   "agent": {
-    "name": "opencode-tomnjerry",
-    "description": "Adaptive Tom n Jerry instruction manifest",
+    "name": { "en": "opencode-tomnjerry" },
+    "description": { "en": "Adaptive Tom n Jerry instruction manifest" },
     "rules": {
       "load_paths": [
         "skills/tom-core/SKILL.md",

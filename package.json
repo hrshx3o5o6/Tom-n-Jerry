@@ -1,7 +1,8 @@
 {
   "name": "@hrshx3o5o6/tomnjerry",
-  "version": "1.0.0",
-  "description": "Opportunistic engineering skill pack for coding agents (npx tomnjerry init)",
+  "version": "1.0.1",
+  "description": "Portable opportunity-detection layer for AI coding agents. Prevents overbuilding by finding shorter, existing paths.",
+  "type": "commonjs",
   "main": "bin/tomnjerry.js",
   "bin": {
     "tomnjerry": "bin/tomnjerry.js"
@@ -9,8 +10,30 @@
   "files": [
     "bin",
     "skills",
-    "templates"
+    "templates",
+    "docs",
+    "examples",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "SECURITY.md"
   ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "doctor": "node bin/tomnjerry.js doctor",
+    "test": "node bin/tomnjerry.js doctor && node bin/tomnjerry.js --version",
+    "bench": "bash benchmarks/agentic/run.sh",
+    "bench-ci": "bash benchmarks/agentic/run-ci.sh",
+    "detect": "node bin/detect-stack.js",
+    "detect-inject": "node bin/detect-stack.js --inject",
+    "mcp-server": "node bin/mcp-server.js",
+    "prepack": "node -e \"require('fs').existsSync('LICENSE') || process.exit(1)\""
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hrshx3o5o6/Tom-n-Jerry.git"
@@ -21,12 +44,19 @@
     "opportunism",
     "prompt-engineering",
     "cursor",
-    "claude"
+    "claude",
+    "npx",
+    "agent-skills",
+    "opportunity-detection",
+    "opencode"
   ],
-  "author": "harsha",
+  "author": "harsha <hrshx3o5o6@users.noreply.github.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hrshx3o5o6/Tom-n-Jerry/issues"
   },
-  "homepage": "https://github.com/hrshx3o5o6/Tom-n-Jerry#readme"
+  "homepage": "https://github.com/hrshx3o5o6/Tom-n-Jerry#readme",
+  "devDependencies": {
+    "promptfoo": "^0.121.19"
+  }
 }

@@ -26,7 +26,7 @@ This skill MUST be executed when:
 
 ---
 
-## Concrete Check Actions
+## Concrete Checks & Actions
 
 1. **Scan Workspace Context:**
    - Search the directory structure for files with matching names, functions, or utilities.
@@ -39,9 +39,9 @@ This skill MUST be executed when:
    - Determine if the task is a file processing/counting/filtering problem solvable in one line of shell script rather than a custom program.
 5. **Inspect Repository History:**
    - Check if a similar feature existed previously and was deleted or changed by looking at git history.
-6. **Detect Domain Out-of-Scope (Self-Adaptation Checklist):**
+6. **Detect Domain Out-of-Scope:**
    - If the codebase uses a framework, language, or system not covered by the core specialized Jerrys (e.g., Terraform/IaC, Swift/iOS, Unity/C#):
-     - **Action:** Draft a custom skill file under `skills/custom-<domain-name>/SKILL.md` using the template in `CONTRIBUTING.md` so future agent actions in this domain are optimized.
+     - **Action:** Optionally draft a custom skill file under `skills/custom-<domain-name>/SKILL.md` using the template in `CONTRIBUTING.md`. Ask user permission before writing new files.
 
 ---
 

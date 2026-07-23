@@ -1,0 +1,49 @@
+{
+  "version": "1",
+  "modes": {
+    "tnj": { "core": "templates/rules/core.md", "label": "Opportunity Card format" },
+    "ponytail": { "core": "templates/rules/terse.md", "label": "Terse one-liner format" }
+  },
+  "defaultMode": "tnj",
+  "packs": {
+    "core": {
+      "always": true,
+      "file": "templates/rules/core.md"
+    },
+    "frontend": {
+      "detect": [
+        { "file": "tailwind.config.js" },
+        { "file": "postcss.config.js" },
+        { "file": "vite.config.js" },
+        { "file": "next.config.js" },
+        { "regex": "\"react\"|\"vue\"|\"angular\"|\"svelte\"", "in": "package.json" }
+      ],
+      "file": "templates/rules/frontend.md"
+    },
+    "backend": {
+      "detect": [
+        { "file": "requirements.txt" },
+        { "file": "go.mod" },
+        { "file": "Cargo.toml" },
+        { "file": "pom.xml" },
+        { "file": "build.gradle" },
+        { "file": "routes/" },
+        { "file": "urls.py" },
+        { "file": "app.js" },
+        { "file": "server.js" },
+        { "regex": "\"express\"|\"fastify\"|\"koa\"|\"django\"|\"flask\"|\"spring-boot\"", "in": "package.json" }
+      ],
+      "file": "templates/rules/backend.md"
+    },
+    "shell": {
+      "detect": [
+        { "file": "Makefile" },
+        { "file": "Dockerfile" },
+        { "regex": "\\.sh$", "in": "dir" },
+        { "file": ".github/workflows/" },
+        { "file": "justfile" }
+      ],
+      "file": "templates/rules/shell.md"
+    }
+  }
+}

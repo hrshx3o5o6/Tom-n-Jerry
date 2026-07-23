@@ -1,0 +1,106 @@
+{
+  "version": "1",
+  "description": "Tom n Jerry scanner registry. Maps each scanner to context pack, triggers, and output mode.",
+  "scanners": [
+    {
+      "id": "tom-core",
+      "contextPack": "core",
+      "role": "momentum",
+      "triggers": ["before-any-task"],
+      "description": "Break vague intent into tasks, state receipt, handle stuck states"
+    },
+    {
+      "id": "jerry-core",
+      "contextPack": "core",
+      "role": "scan",
+      "triggers": ["before-code"],
+      "description": "Pre-flight: YAGNI, codebase search, dependency check, git history"
+    },
+    {
+      "id": "receipt-jerry",
+      "contextPack": "core",
+      "role": "verify",
+      "triggers": ["after-code"],
+      "description": "Verification: run receipt command, capture output, compare against expected"
+    },
+    {
+      "id": "browser-jerry",
+      "contextPack": "frontend",
+      "role": "scan",
+      "triggers": ["before-js-library", "before-custom-component"],
+      "domains": ["frontend", "ui", "dom"],
+      "description": "Check native Web APIs before adding JS libraries or custom components"
+    },
+    {
+      "id": "dependency-jerry",
+      "contextPack": "core",
+      "role": "scan",
+      "triggers": ["before-install", "before-import"],
+      "description": "Scan manifest files for existing packages before installing new ones"
+    },
+    {
+      "id": "framework-jerry",
+      "contextPack": "backend",
+      "role": "scan",
+      "triggers": ["before-new-file", "before-middleware", "before-route"],
+      "domains": ["backend", "fullstack"],
+      "description": "Check framework conventions (Next.js middleware, Spring Boot config, Django generic views)"
+    },
+    {
+      "id": "db-jerry",
+      "contextPack": "backend",
+      "role": "scan",
+      "triggers": ["before-migration", "before-new-column", "before-query"],
+      "description": "Inspect schemas before adding fields, check existing indexes"
+    },
+    {
+      "id": "api-jerry",
+      "contextPack": "backend",
+      "role": "scan",
+      "triggers": ["before-new-endpoint", "before-new-route"],
+      "description": "Search existing endpoints before creating new ones, reuse controllers"
+    },
+    {
+      "id": "git-jerry",
+      "contextPack": "core",
+      "role": "scan",
+      "triggers": ["before-rebuild", "before-new-file"],
+      "description": "Check git log for deleted features before rebuilding them"
+    },
+    {
+      "id": "delete-jerry",
+      "contextPack": "core",
+      "role": "scan",
+      "triggers": ["before-refactor", "before-edit"],
+      "description": "Search for zero-callers before editing, prefer deletion over patch"
+    },
+    {
+      "id": "unix-jerry",
+      "contextPack": "shell",
+      "role": "scan",
+      "triggers": ["before-new-script"],
+      "description": "One shell command vs custom script. rg, jq, awk, sed before Python/Node"
+    },
+    {
+      "id": "trap-jerry",
+      "contextPack": "core",
+      "role": "scan",
+      "triggers": ["before-auth", "before-cache", "before-queue", "before-crypto"],
+      "description": "Detect infrastructure traps: custom auth, caching, queues, crypto"
+    },
+    {
+      "id": "test-jerry",
+      "contextPack": "backend",
+      "role": "scan",
+      "triggers": ["before-new-test", "before-new-fixture"],
+      "description": "Check existing test infrastructure before creating new helpers"
+    },
+    {
+      "id": "tomnjerry",
+      "contextPack": "core",
+      "role": "coordinator",
+      "triggers": ["before-any-task"],
+      "description": "Coordinator: orchestrates Tom → Jerry → Receipt loop"
+    }
+  ]
+}

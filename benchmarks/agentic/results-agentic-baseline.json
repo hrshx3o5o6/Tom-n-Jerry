@@ -1,0 +1,76 @@
+{
+  "arm": "baseline (no skill)",
+  "timestamp": "2026-07-23T17:58:09.303Z",
+  "results": [
+    {
+      "task": "node-express-rate-limit",
+      "arm": "baseline (no skill)",
+      "hasCode": true,
+      "loc": 46,
+      "codeBlocks": 2,
+      "triedNewInstall": true,
+      "checkedExisting": true,
+      "foundShortcut": false,
+      "promptTokens": 538,
+      "completionTokens": 664,
+      "totalTokens": 1202,
+      "outputPreview": "To add rate limiting to the `/api/auth/*` routes in your Express application, you can use the `express-rate-limit` package. Here's how you can implement it:\n\n1. First, make sure to install the `expres"
+    },
+    {
+      "task": "node-express-csv-export",
+      "arm": "baseline (no skill)",
+      "hasCode": true,
+      "loc": 46,
+      "codeBlocks": 1,
+      "triedNewInstall": false,
+      "checkedExisting": true,
+      "foundShortcut": false,
+      "promptTokens": 530,
+      "completionTokens": 650,
+      "totalTokens": 1180,
+      "outputPreview": "To add a `GET /api/users/export` endpoint that returns all users as a CSV file download, you can utilize the `json2csv` library that is already included in your `package.json`. Below is the modified `"
+    },
+    {
+      "task": "react-dark-mode",
+      "arm": "baseline (no skill)",
+      "hasCode": true,
+      "loc": 53,
+      "codeBlocks": 1,
+      "triedNewInstall": false,
+      "checkedExisting": true,
+      "foundShortcut": false,
+      "promptTokens": 493,
+      "completionTokens": 686,
+      "totalTokens": 1179,
+      "outputPreview": "To add a dark mode toggle button to your React dashboard, you can follow these steps:\n\n1. **Update the `App` component to include a toggle button.**\n2. **Use local storage to persist the user's theme "
+    },
+    {
+      "task": "react-date-picker",
+      "arm": "baseline (no skill)",
+      "hasCode": true,
+      "loc": 47,
+      "codeBlocks": 1,
+      "triedNewInstall": false,
+      "checkedExisting": false,
+      "foundShortcut": false,
+      "promptTokens": 487,
+      "completionTokens": 674,
+      "totalTokens": 1161,
+      "outputPreview": "To add a date range filter to your dashboard, we can implement a simple date picker using HTML input elements. We'll modify the `App` component to include two date input fields for selecting the start"
+    },
+    {
+      "task": "node-express-validation",
+      "arm": "baseline (no skill)",
+      "hasCode": true,
+      "loc": 57,
+      "codeBlocks": 1,
+      "triedNewInstall": false,
+      "checkedExisting": true,
+      "foundShortcut": true,
+      "promptTokens": 537,
+      "completionTokens": 739,
+      "totalTokens": 1276,
+      "outputPreview": "To add input validation middleware for the `POST /api/users` endpoint, you can create a middleware function that checks for the presence of `name` and `email`, and validates the format of the `email`."
+    }
+  ]
+}

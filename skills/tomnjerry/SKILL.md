@@ -24,11 +24,14 @@ Whenever you receive a task or plan:
 - Before implementing the Candidate Move, load and execute `skills/jerry-core/SKILL.md`.
 - Depending on the target files, trigger the appropriate specialized Jerry:
   - Frontend/UI → `skills/browser-jerry/SKILL.md`
+  - Framework config (Next.js, Spring Boot, etc.) → `skills/framework-jerry/SKILL.md`
   - Manifests/Dependencies → `skills/dependency-jerry/SKILL.md`
   - SQL/Migrations → `skills/db-jerry/SKILL.md`
   - API Routes/Controllers → `skills/api-jerry/SKILL.md`
   - Shell / Text manipulation → `skills/unix-jerry/SKILL.md`
   - History / Reverted features → `skills/git-jerry/SKILL.md`
+  - Solving by removing code → `skills/delete-jerry/SKILL.md`
+  - Test infrastructure → `skills/test-jerry/SKILL.md`
   - Complex modules (Auth/Caches) → `skills/trap-jerry/SKILL.md`
 - Output 1 to 3 **Opportunity Cards** (see format in `docs/opportunity-cards.md`).
 - Revise the Candidate Move based on the cards.

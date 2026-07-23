@@ -3,3 +3,8 @@ about/
 work/
 outputs/
 docs/superpowers/plans/
+node_modules/
+*.log
+dev/
+wiki/
+.obsidian/
