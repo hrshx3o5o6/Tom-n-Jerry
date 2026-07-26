@@ -6,20 +6,101 @@ const https = require('https');
 
 const PKG = require('../package.json');
 const SOURCE_DIR = path.join(__dirname, '..');
-const SKILLS_DIR = path.join(SOURCE_DIR, 'skills');
+const TNJ_DIR = path.join(SOURCE_DIR, 'tnj');
 const TEMPLATES_DIR = path.join(SOURCE_DIR, 'templates');
 
 const REQUIRED_SKILLS = [
   'tom-core', 'jerry-core', 'receipt-jerry', 'browser-jerry',
   'framework-jerry', 'dependency-jerry', 'db-jerry', 'api-jerry',
-  'git-jerry', 'delete-jerry', 'unix-jerry', 'trap-jerry',
-  'test-jerry', 'tomnjerry'
+  'git-jerry', 'delete-jerry', 'unix-jerry', 'trap-jerry', 'test-jerry'
 ];
 
-const REQUIRED_TEMPLATES = [
-  '.cursorrules', 'claudeproj.md', 'opencode.json',
-  'tomnjerry-combined.rules', 'always-on-rules.md'
-];
+const GLOBAL_AGENTS_PATH = path.join(
+  process.env.HOME || process.env.USERPROFILE,
+  '.config', 'opencode', 'AGENTS.md'
+);
+
+const TNJ_GLOBAL_BLOCK = `
+<!-- tnj-global-begin -->
+# TNJ: Tom n Jerry Loop Engine
+
+YOU MUST RUN THIS LOOP EVERY TURN.
+
+## The Loop
+
+Every user request runs: Tom → Jerry → (card or implement) → receipt → Teacher → loop
+
+### 1. Tom (Momentum)
+Propose ONE concrete next action. Be specific.
+"I'll add express-rate-limit middleware to /api/auth routes."
+State the receipt: "I'll prove it worked by running curl -I /api/auth/login."
+
+### 2. Jerry (Street Smarts)
+Read \`.tnj/index.json\`. Match the current task intent + tech stack to skill keywords.
+For each matching skill: read \`.tnj/skills/<skill>.md\`, run its checks.
+- If a shortcut exists → emit Opportunity Card → Tom implements the shortcut.
+- If no shortcut → Tom implements directly.
+
+### 3. Receipt (Proof)
+After every implementation step, run the receipt command.
+Capture stdout, stderr, exit code. Compare against expected.
+If mismatch → diagnose and fix. If pass → confirm and proceed.
+
+### 4. Teacher (Learning)
+After completing a full task (not each step), reflect:
+- Did we discover a non-obvious pattern worth remembering?
+- Would this apply to 2+ future tasks?
+If yes → write \`.tnj/learnings/<topic>.md\` (concise, 5-15 lines).
+Then append the new skill entry to \`.tnj/index.json\`.
+
+### 5. Loop
+After receipt → loop back to Tom for next step.
+After Teacher → stay on current task or move to next.
+
+## Opportunity Card Format
+
+If shortcut found, response MUST start with:
+
+**Opportunity Card**
+**Type:** reuse | native | delete | shell | history | dependency | trap | defer
+**Claim:** One sentence.
+**Evidence:** File paths, command output.
+**Move:** Exact action.
+**Receipt:** Verification command.
+
+If no shortcut found: "No opportunity found."
+
+## Skill Index (\`.tnj/index.json\`)
+
+Jerry reads this first to find relevant skills. Format:
+\`\`\`json
+{
+  "skills": [{
+    "id": "descriptive-name",
+    "trigger": "when-to-read",
+    "keywords": ["intent", "tech", "context"],
+    "path": "skills/name.md",
+    "type": "generic|custom"
+  }]
+}
+\`\`\`
+
+## Skill Creation Rules
+
+- Save only patterns that apply to 2+ future tasks.
+- Be concise: 5-15 lines. Include trigger condition, checks, example.
+- File name: lowercase-hyphens.md
+- Append entry to \`.tnj/index.json\` after writing.
+- Skills in \`.tnj/learnings/\` with 2+ successful retrievals → promote to \`.tnj/skills/\` by updating index.json path.
+
+## Anti-Traps
+
+- Tom without Jerry = overbuilding. Always scan before implementing.
+- Jerry without Tom = analysis paralysis. Always implement after scanning.
+- Receipt without a command = "it built" ≠ it works. Always run verification.
+- Learning without a trigger = noise. Only save genuine patterns.
+<!-- tnj-global-end -->
+`;
 
 const command = process.argv[2];
 
@@ -31,11 +112,11 @@ switch (command) {
   case undefined:
     runInit();
     break;
-  case 'mcp-server':
-    require('./mcp-server');
+  case 'install-global':
+    runInstallGlobal();
     break;
-  case 'detect':
-    require('./detect-stack');
+  case 'remove-global':
+    runRemoveGlobal();
     break;
   case '--help':
   case '-h':
@@ -47,7 +128,7 @@ switch (command) {
     break;
   default:
     console.error(`Unknown command: ${command}`);
-    console.error('Usage: npx @hrshx3o5o6/tomnjerry [init|doctor|mcp-server|detect|--help|--version]');
+    console.error('Usage: npx @hrshx3o5o6/tomnjerry [init|doctor|install-global|remove-global|--help|--version]');
     process.exit(1);
 }
 
@@ -57,7 +138,6 @@ function runDoctor() {
   console.log('🐭 Tom n Jerry — Diagnostic Report\n');
   let allPassed = true;
 
-  // Version
   console.log(`Version: ${PKG.version}`);
   checkLatestVersion().then(latest => {
     if (latest && latest !== PKG.version) {
@@ -65,91 +145,76 @@ function runDoctor() {
     }
   });
 
+  // TNJ structure check
+  console.log(`\nTNJ Structure:`);
+  const tnjExists = fs.existsSync(TNJ_DIR);
+  if (!tnjExists) {
+    console.error(`  ✖ .tnj/ directory not found at ${TNJ_DIR}`);
+    allPassed = false;
+  } else {
+    console.log(`  ✔ .tnj/ directory exists`);
+  }
+
+  // Skill index check
+  const indexPath = path.join(TNJ_DIR, 'index.json');
+  if (fs.existsSync(indexPath)) {
+    try {
+      const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+      const skillCount = index.skills ? index.skills.length : 0;
+      console.log(`  ✔ index.json: ${skillCount} skills registered`);
+    } catch {
+      console.error(`  ✖ index.json is malformed JSON`);
+      allPassed = false;
+    }
+  } else {
+    console.error(`  ✖ Missing: tnj/index.json`);
+    allPassed = false;
+  }
+
   // Skills check
   console.log(`\nSkills (${REQUIRED_SKILLS.length} required):`);
   REQUIRED_SKILLS.forEach(name => {
-    const filePath = path.join(SKILLS_DIR, name, 'SKILL.md');
+    const filePath = path.join(TNJ_DIR, 'skills', `${name}.md`);
     if (!fs.existsSync(filePath)) {
-      console.error(`  ✖ Missing: ${name}/SKILL.md`);
+      console.error(`  ✖ Missing: skills/${name}.md`);
       allPassed = false;
-      return;
-    }
-    const content = fs.readFileSync(filePath, 'utf-8');
-    if (!content.startsWith('---')) {
-      console.warn(`  ⚠ ${name}/SKILL.md — missing YAML frontmatter`);
     } else {
       console.log(`  ✔ ${name}`);
     }
   });
 
-  // Coordinator routing check
-  const coordPath = path.join(SKILLS_DIR, 'tomnjerry', 'SKILL.md');
-  if (fs.existsSync(coordPath)) {
-    const coordContent = fs.readFileSync(coordPath, 'utf-8');
-    const mentioned = [];
-    REQUIRED_SKILLS.forEach(name => {
-      if (name !== 'tomnjerry' && name !== 'receipt-jerry'
-          && name !== 'tom-core' && name !== 'jerry-core') {
-        if (coordContent.includes(name)) mentioned.push(name);
-      }
-    });
-    const orphans = ['delete-jerry', 'test-jerry', 'framework-jerry'].filter(
-      name => !coordContent.includes(name)
-    );
-    if (orphans.length > 0) {
-      console.warn(`  ⚠ Coordinator missing: ${orphans.join(', ')}`);
-      allPassed = false;
-    } else {
-      console.log('  ✔ Coordinator routing complete');
-    }
-  }
-
-  // Scanners registry check
-  const scannersPath = path.join(SOURCE_DIR, 'scanners.json');
-  if (fs.existsSync(scannersPath)) {
-    const scanners = JSON.parse(fs.readFileSync(scannersPath, 'utf-8'));
-    const scannerIds = scanners.scanners.map(s => s.id);
-    const missing = REQUIRED_SKILLS.filter(s => !scannerIds.includes(s));
-    if (missing.length > 0) {
-      console.log(`  ⚠ scanners.json missing: ${missing.join(', ')}`);
-      allPassed = false;
-    } else {
-      console.log('  ✔ scanners.json: all 14 scanners registered');
-    }
-  }
-
-  // Context pack detection + mode
-  const { detect, getMode } = require('./detect-stack');
-  const detected = detect();
-  const mode = getMode();
-  console.log(`  ℹ Context packs active: ${detected.join(', ')}`);
-  console.log(`  ℹ Output mode: ${mode}`);
-  console.log('  ✔ MCP server: bin/mcp-server.js');
-
-  // Templates check
-  console.log(`\nTemplates:`);
-  REQUIRED_TEMPLATES.forEach(name => {
-    const tpl = path.join(TEMPLATES_DIR, name);
-    if (fs.existsSync(tpl)) {
-      console.log(`  ✔ ${name}`);
-    } else {
-      console.warn(`  ⚠ Missing: ${name}`);
-      allPassed = false;
-    }
-  });
-
-  // Check init state (if skills exist in target)
-  const targetDir = process.cwd();
-  const skillsTarget = path.join(targetDir, 'skills');
-  if (fs.existsSync(skillsTarget)) {
-    const installed = fs.readdirSync(skillsTarget)
-      .filter(f => fs.lstatSync(path.join(skillsTarget, f)).isDirectory());
-    console.log(`\nInstallation status: ${installed.length} skill directories in project already`);
+  // Always-on rules template check
+  const rulesPath = path.join(TEMPLATES_DIR, 'always-on-rules.md');
+  if (fs.existsSync(rulesPath)) {
+    console.log(`\n  ✔ always-on-rules.md`);
   } else {
-    console.log('\nInstallation status: not yet initialized in this directory');
+    console.warn(`  ⚠ Missing: templates/always-on-rules.md`);
   }
 
-  console.log(allPassed ? '\n✔ All checks passed.' : '\n⚠ Some checks failed. Re-run `init` to fix.');
+  // Global AGENTS.md check
+  console.log(`\nGlobal AGENTS.md:`);
+  if (fs.existsSync(GLOBAL_AGENTS_PATH)) {
+    const content = fs.readFileSync(GLOBAL_AGENTS_PATH, 'utf-8');
+    if (content.includes('<!-- tnj-global-begin -->')) {
+      console.log(`  ✔ TNJ loop protocol installed globally`);
+    } else {
+      console.warn(`  ⚠ AGENTS.md exists but TNJ block not found. Run install-global.`);
+    }
+  } else {
+    console.log(`  ℹ No global AGENTS.md (run install-global to create)`);
+  }
+
+  // Project initialization check
+  const targetDir = process.cwd();
+  const projectTnj = path.join(targetDir, '.tnj');
+  if (fs.existsSync(projectTnj)) {
+    const installed = fs.readdirSync(projectTnj).filter(f => f !== '.gitkeep');
+    console.log(`\nProject status: ${installed.length} items in .tnj/`);
+  } else {
+    console.log(`\nProject status: not initialized (run tnj init in project)`);
+  }
+
+  console.log(allPassed ? '\n✔ All checks passed.' : '\n⚠ Some checks failed.');
   process.exit(allPassed ? 0 : 1);
 }
 
@@ -176,51 +241,9 @@ function checkLatestVersion() {
 
 function runInit() {
   const targetDir = process.cwd();
+  const projectTnj = path.join(targetDir, '.tnj');
 
-  console.log('🐭 Tom n Jerry: Starting preflight configuration...\n');
-
-  const visited = new Set();
-
-  function copyFolderSync(from, to) {
-    const realFrom = fs.realpathSync(from);
-    if (visited.has(realFrom)) {
-      console.warn(`  ⚠ Skipping circular symlink: ${from}`);
-      return;
-    }
-    visited.add(realFrom);
-
-    if (!fs.existsSync(to)) {
-      fs.mkdirSync(to, { recursive: true });
-    }
-    fs.readdirSync(from).forEach((element) => {
-      const srcPath = path.join(from, element);
-      const destPath = path.join(to, element);
-      let stat;
-      try {
-        stat = fs.lstatSync(srcPath);
-      } catch (err) {
-        console.warn(`  ⚠ Skipping unreadable entry: ${srcPath} (${err.code})`);
-        return;
-      }
-      if (stat.isSymbolicLink()) {
-        const linkTarget = fs.readlinkSync(srcPath);
-        try {
-          fs.symlinkSync(linkTarget, destPath);
-        } catch (err) {
-          console.warn(`  ⚠ Could not copy symlink ${srcPath} -> ${destPath} (${err.code})`);
-        }
-      } else if (stat.isFile()) {
-        try {
-          fs.copyFileSync(srcPath, destPath);
-        } catch (err) {
-          console.warn(`  ⚠ Failed to copy ${srcPath} -> ${destPath} (${err.code})`);
-          throw err;
-        }
-      } else if (stat.isDirectory()) {
-        copyFolderSync(srcPath, destPath);
-      }
-    });
-  }
+  console.log('🐭 Tom n Jerry: Initializing project...\n');
 
   let interrupted = false;
 
@@ -230,119 +253,142 @@ function runInit() {
       process.exit(1);
     }
     interrupted = true;
-    console.error('\n⚠ Interrupted. Some files may be in partial state. Run the command again to complete.');
+    console.error('\n⚠ Interrupted. Some files may be in partial state. Run init again to complete.');
     process.exit(1);
   });
 
-  function fileExists(target) {
-    try { return fs.existsSync(target); }
-    catch { return false; }
-  }
-
-  function copyWithOverwriteCheck(src, dest, label) {
-    if (fileExists(dest)) {
-      console.warn(`  ⚠ ${label} already exists at ${dest} — skipping (use --force to overwrite)`);
-      return false;
-    }
-    if (!fileExists(src)) {
-      console.warn(`  ⚠ ${label} source not found at ${src} — skipping`);
-      return false;
-    }
-    fs.copyFileSync(src, dest);
-    return true;
-  }
-
   try {
-    // Copy skills directory
-    const skillsSource = path.join(SOURCE_DIR, 'skills');
-    const skillsTarget = path.join(targetDir, 'skills');
+    // Copy tnj/ directory to project
+    if (fs.existsSync(path.join(TNJ_DIR, 'skills'))) {
+      console.log('-> Creating .tnj/ directory with skills...');
 
-    if (fs.existsSync(skillsSource)) {
-      console.log('-> Copying skills folder...');
-      copyFolderSync(skillsSource, skillsTarget);
-      console.log('✔ Skills copied successfully.');
-    } else {
-      console.error('✖ Source skills directory not found.');
-      process.exit(1);
+      if (!fs.existsSync(projectTnj)) {
+        fs.mkdirSync(projectTnj, { recursive: true });
+      }
+
+      // Copy index.json
+      const srcIndex = path.join(TNJ_DIR, 'index.json');
+      const destIndex = path.join(projectTnj, 'index.json');
+      if (fs.existsSync(srcIndex)) {
+        fs.copyFileSync(srcIndex, destIndex);
+        console.log('  ✔ Copied index.json');
+      }
+
+      // Copy skills/
+      const srcSkills = path.join(TNJ_DIR, 'skills');
+      const destSkills = path.join(projectTnj, 'skills');
+      if (fs.existsSync(srcSkills)) {
+        copyDirRecursive(srcSkills, destSkills);
+        const skillFiles = fs.readdirSync(destSkills).length;
+        console.log(`  ✔ Copied ${skillFiles} skill files`);
+      }
+
+      // Create learnings/
+      const destLearnings = path.join(projectTnj, 'learnings');
+      if (!fs.existsSync(destLearnings)) {
+        fs.mkdirSync(destLearnings, { recursive: true });
+        fs.writeFileSync(path.join(destLearnings, '.gitkeep'), '');
+      }
+      console.log('  ✔ Created learnings/ directory');
     }
 
-    // Always-on rules
-    copyWithOverwriteCheck(
-      path.join(TEMPLATES_DIR, 'always-on-rules.md'),
-      path.join(targetDir, 'always-on-rules.md'),
-      'always-on-rules.md'
-    );
-
-    // Harness Auto-Detection
-    console.log('\n-> Detecting agent environments...');
-
-    let detected = false;
-
-    if (copyWithOverwriteCheck(
-      path.join(TEMPLATES_DIR, '.cursorrules'),
-      path.join(targetDir, '.cursorrules'),
-      '.cursorrules'
-    )) {
-      console.log('✔ Cursor environment detected. Created .cursorrules in root.');
-      detected = true;
-    }
-
-    if (copyWithOverwriteCheck(
-      path.join(TEMPLATES_DIR, 'claudeproj.md'),
-      path.join(targetDir, 'claudeproj.md'),
-      'claudeproj.md'
-    )) {
-      console.log('✔ Claude Code project template created as claudeproj.md.');
-      detected = true;
-    }
-
-    if (copyWithOverwriteCheck(
-      path.join(TEMPLATES_DIR, 'opencode.json'),
-      path.join(targetDir, 'opencode.json'),
-      'opencode.json'
-    )) {
-      console.log('✔ opencode project config created as opencode.json.');
-      detected = true;
-    }
-
-    if (!detected) {
-      console.log('ℹ No specific harness configuration files generated. Standard skills are ready.');
-      console.log('ℹ For always-on mode, inject templates/always-on-rules.md into your agent\'s system prompt.');
-    }
-
-    console.log('\n🐱 Tom n Jerry initialization complete! Run "/tomnjerry" inside your agent chat to scan your workspace.');
-    console.log('   Verify: run "npx @hrshx3o5o6/tomnjerry doctor" to check the installation.');
-    console.log('   Always-on: inject always-on-rules.md into your agent\'s system prompt for best results.');
+    console.log('\n🐱 Tom n Jerry initialization complete!');
+    console.log('   Project .tnj/ created with 13 skill files and index.');
+    console.log('   Restart opencode to pick up the new AGENTS.md loop protocol.');
+    console.log('   Verify: npx @hrshx3o5o6/tomnjerry doctor');
 
   } catch (error) {
     console.error('✖ Initialization failed:', error.message);
-    if (error.stack) {
-      console.error('  Location:', error.stack.split('\n').slice(1, 2).join('').trim());
-    }
     process.exit(1);
   }
+}
+
+function copyDirRecursive(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+  fs.readdirSync(src).forEach(item => {
+    const srcPath = path.join(src, item);
+    const destPath = path.join(dest, item);
+    const stat = fs.lstatSync(srcPath);
+    if (stat.isDirectory()) {
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  });
+}
+
+// ─── Global AGENTS.md ──────────────────────────────────────────────────────────
+
+function runInstallGlobal() {
+  const dir = path.dirname(GLOBAL_AGENTS_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  let content = '';
+  if (fs.existsSync(GLOBAL_AGENTS_PATH)) {
+    content = fs.readFileSync(GLOBAL_AGENTS_PATH, 'utf-8');
+  }
+
+  if (content.includes('<!-- tnj-global-begin -->')) {
+    console.log('✔ TNJ loop protocol already installed in ~/.config/opencode/AGENTS.md');
+    console.log('   Restart opencode to pick up changes.');
+    return;
+  }
+
+  content += '\n' + TNJ_GLOBAL_BLOCK + '\n';
+  fs.writeFileSync(GLOBAL_AGENTS_PATH, content);
+  console.log('✔ TNJ loop protocol installed in ~/.config/opencode/AGENTS.md');
+  console.log('   Restart opencode to activate.');
+}
+
+function runRemoveGlobal() {
+  if (!fs.existsSync(GLOBAL_AGENTS_PATH)) {
+    console.log('ℹ No global AGENTS.md found — nothing to remove.');
+    return;
+  }
+
+  let content = fs.readFileSync(GLOBAL_AGENTS_PATH, 'utf-8');
+  const startMarker = '<!-- tnj-global-begin -->';
+  const endMarker = '<!-- tnj-global-end -->';
+
+  if (!content.includes(startMarker)) {
+    console.log('ℹ No TNJ block found in AGENTS.md.');
+    return;
+  }
+
+  const startIdx = content.indexOf(startMarker);
+  const endIdx = content.indexOf(endMarker) + endMarker.length;
+  content = content.slice(0, startIdx) + content.slice(endIdx);
+  content = content.replace(/\n{3,}/g, '\n\n');
+
+  fs.writeFileSync(GLOBAL_AGENTS_PATH, content);
+  console.log('✔ TNJ loop protocol removed from ~/.config/opencode/AGENTS.md');
 }
 
 // ─── Help ──────────────────────────────────────────────────────────────────────
 
 function printHelp() {
   console.log(`
-Tom n Jerry — Opportunistic engineering skill pack for AI coding agents.
+Tom n Jerry — Self-improving loop engine for AI coding agents.
 
 Usage:
-  npx @hrshx3o5o6/tomnjerry init         Initialize skills in the current project (default)
-  npx @hrshx3o5o6/tomnjerry doctor        Run diagnostic checks
-  npx @hrshx3o5o6/tomnjerry mcp-server    Start MCP server (STDIO transport)
-  npx @hrshx3o5o6/tomnjerry detect        Detect active context packs
-  npx @hrshx3o5o6/tomnjerry --help        Show this message
-  npx @hrshx3o5o6/tomnjerry --version     Show version
+  npx @hrshx3o5o6/tomnjerry init              Initialize .tnj/ in project (skills + index)
+  npx @hrshx3o5o6/tomnjerry doctor             Run diagnostic checks
+  npx @hrshx3o5o6/tomnjerry install-global     Install loop protocol to ~/.config/opencode/AGENTS.md
+  npx @hrshx3o5o6/tomnjerry remove-global      Remove loop protocol from AGENTS.md
+  npx @hrshx3o5o6/tomnjerry --help             Show this message
+  npx @hrshx3o5o6/tomnjerry --version         Show version
 
-Modes:
-  TNJ_MODE=ponytail  Switch to terse one-liner output (Ponytail compat)
+Setup:
+  1. install-global  — makes TNJ fire in every opencode session
+  2. init            — creates .tnj/ in your project (skills + learnings)
+  3. restart opencode — pick up the loop protocol
 
-Context packs (auto-detected from CWD):
-  core — always inject  |  frontend — browser/CSS/React APIs
-  backend — framework/API/DB  |  shell — unix tools/pipeline
+The Loop:
+  Tom (momentum) → Jerry (scan for shortcuts) → receipt (prove it) → Teacher (learn) → loop
 
 Docs: https://github.com/hrshx3o5o6/Tom-n-Jerry
 `);

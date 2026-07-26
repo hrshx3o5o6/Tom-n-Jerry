@@ -1,7 +1,7 @@
 {
   "name": "@hrshx3o5o6/tomnjerry",
-  "version": "1.0.1",
-  "description": "Portable opportunity-detection layer for AI coding agents. Prevents overbuilding by finding shorter, existing paths.",
+  "version": "2.0.0",
+  "description": "Self-improving loop engine for AI coding agents. Tom (momentum) + Jerry (opportunism) + Teacher (learning). Prevents overbuilding.",
   "type": "commonjs",
   "main": "bin/tomnjerry.js",
   "bin": {
@@ -9,10 +9,9 @@
   },
   "files": [
     "bin",
-    "skills",
+    "tnj",
     "templates",
     "docs",
-    "examples",
     "CONTRIBUTING.md",
     "LICENSE",
     "CHANGELOG.md",
@@ -29,9 +28,6 @@
     "test": "node bin/tomnjerry.js doctor && node bin/tomnjerry.js --version",
     "bench": "bash benchmarks/agentic/run.sh",
     "bench-ci": "bash benchmarks/agentic/run-ci.sh",
-    "detect": "node bin/detect-stack.js",
-    "detect-inject": "node bin/detect-stack.js --inject",
-    "mcp-server": "node bin/mcp-server.js",
     "prepack": "node -e \"require('fs').existsSync('LICENSE') || process.exit(1)\""
   },
   "repository": {
@@ -40,7 +36,7 @@
   },
   "keywords": [
     "agents",
-    "skills",
+    "loop-engine",
     "opportunism",
     "prompt-engineering",
     "cursor",
@@ -48,7 +44,8 @@
     "npx",
     "agent-skills",
     "opportunity-detection",
-    "opencode"
+    "opencode",
+    "self-improving"
   ],
   "author": "harsha <hrshx3o5o6@users.noreply.github.com>",
   "license": "MIT",
