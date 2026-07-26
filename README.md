@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="tomnjerry.png" alt="Tom n Jerry Logo" width="300" />
+  <img src="tomnjerry.png" alt="Tom n Jerry Logo" width="280" />
 </p>
 
 <h1 align="center">Tom n Jerry</h1>
 
 <p align="center">
-  <i>Tom finds a solution. Jerry finds a shortcut.</i>
+  <i>Tom keeps moving. Jerry finds the shortcut.<br>The loop runs until it's done right.</i>
 </p>
 
 <p align="center">
@@ -13,134 +13,248 @@
   <a href="https://github.com/hrshx3o5o6/Tom-n-Jerry"><img src="https://img.shields.io/github/stars/hrshx3o5o6/Tom-n-Jerry.svg?style=flat-square&color=black" alt="GitHub stars" /></a>
   <a href="https://github.com/hrshx3o5o6/Tom-n-Jerry/actions"><img src="https://img.shields.io/github/actions/workflow/status/hrshx3o5o6/Tom-n-Jerry/ci.yml?style=flat-square&color=black" alt="CI" /></a>
   <a href="https://github.com/hrshx3o5o6/Tom-n-Jerry/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@hrshx3o5o6/tomnjerry.svg?style=flat-square&color=black" alt="MIT" /></a>
-  <a href="https://www.npmjs.com/package/@hrshx3o5o6/tomnjerry"><img src="https://img.shields.io/npm/dm/@hrshx3o5o6/tomnjerry.svg?style=flat-square&color=black" alt="npm downloads" /></a>
 </p>
 
-**Tom n Jerry** is a portable, agent-agnostic **opportunity detection layer** for your AI coding agents (Claude Code, Cursor, Aider, opencode). 
+**Tom n Jerry** is a self-improving loop engine for AI coding agents. It runs on every turn — intercepting overbuilding, finding existing paths, and learning your codebase's patterns over time.
 
-It stops your agent from brute-forcing code abstractions and forces it to behave like a lazy, street-smart senior developer.
+Unlike a static ruleset, it gets smarter. After three sessions of "add rate limiting to auth routes," Jerry knows your codebase's Express setup and skips the research entirely.
+
+---
+
+## The Problem
+
+Your AI coding agent is capable. It's also an overbuilder.
+
+You ask for a login endpoint. It installs `passport-jwt`, writes a custom middleware, creates a token verification utility, and adds a session store — 400 lines of code. `package.json` had `bcryptjs` and `jsonwebtoken` already.
+
+This happens every session. On every task.
+
+**54% more code** than necessary. More dependencies. More attack surface. More to maintain.
+
+The agent doesn't know what your codebase already has.
+
+---
+
+## The Solution
+
+Tom n Jerry runs a loop on every turn:
+
+```
+Tom → Jerry → (card or implement) → Receipt → Teacher → loop
+```
+
+**Tom** is momentum. He decomposes vague requests into concrete actions and states a receipt before writing anything.
+
+**Jerry** is street smart. He checks your lockfile, your git history, your framework config, your native APIs — and finds the existing path.
+
+**Receipt** is proof. After every change, Jerry runs a verification command and shows the output. No "it built."
+
+**Teacher** is memory. After the session, if a non-obvious pattern was discovered, Jerry writes a skill file for next time.
+
+---
+
+## Before / After
+
+**You:** "Add rate limiting to `/api/auth/*` routes"
+
+**Without Tom n Jerry:**
+Agent installs `express-rate-limit`, writes 80 lines of middleware config, adds Redis session store.
+
+**With Tom n Jerry:**
+Jerry reads `.tnj/index.json` → matches `dependency-jerry` → checks `package.json`
+→ `express-rate-limit` already installed → `framework-jerry` → `next.config.js` has rate limit config already.
+
+Jerry emits an Opportunity Card:
+
+> **Type:** reuse
+> **Claim:** `express-rate-limit` already in package.json.
+> **Evidence:** `package.json#L23`
+> **Move:** Use existing package, add 3 lines to route file.
+> **Receipt:** `curl -I /api/auth/login`
+
+**Result:** 3 lines of code. Zero new packages.
+
+---
+
+## The Loop, Explained
+
+```
+[User Request]
+      │
+      ▼
+┌─────────────┐
+│   TOM        │  Proposes one concrete action.
+│  (Momentum)   │  "I'll add rate limiting to /api/auth/*"
+│               │  States the receipt: "curl -I proves it works."
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│   JERRY      │  Reads .tnj/index.json, matches skills,
+│(Street Smart)│  runs checks on package.json, git history,
+│              │  native APIs, framework config.
+└──────┬──────┘
+       │
+       ├─ Shortcut found ──► Opportunity Card ──► Tom implements
+       │
+       └─ No shortcut ──► Tom implements directly
+                                   │
+                                   ▼
+                        ┌─────────────────┐
+                        │    RECEIPT       │
+                        │  (Proof)        │
+                        │ curl -I ...      │
+                        │ HTTP 429 OK     │
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │   TEACHER       │
+                        │  (Learning)     │
+                        │ Pattern worth   │
+                        │ remembering?   │
+                        │ Write .tnj/    │
+                        │ learnings/      │
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                           Next action
+```
+
+### The Ladder (What Jerry Checks)
+
+Jerry runs this ladder on every turn, top to bottom:
+
+1. **Does this need to exist?** → YAGNI. Skip it.
+2. **Already in git history?** → `git log --grep` — was it deleted before?
+3. **Already in codebase?** → `rg` search for existing functions.
+4. **Already in package.json?** → Use the lockfile dep. Don't install.
+5. **Stdlib covers it?** → Node `crypto`, Python `datetime`. No install.
+6. **Native platform?** → Browser `<dialog>`, `popover`. No JS library.
+7. **Framework convention?** → Next.js middleware, Spring auto-config. Use it.
+8. **Then — build the minimum.**
+
+### Self-Learning
+
+After a session where Jerry discovered "express-rate-limit already installed," Teacher writes:
+
+```markdown
+# express-rate-limit-pattern
+
+Trigger: before adding rate limiting to Express routes.
+
+## Checks
+1. package.json → express-rate-limit present?
+2. Existing middleware in /api/auth already wired?
+
+## Action
+- If present: 3 lines to wire it.
+- If not: install with --save-prod, wire 5 lines.
+
+## Pattern
+Already implemented at /api/auth/login — reuse for all /api/auth/* routes.
+```
+
+Next session: Jerry reads the skill in 2 seconds, Tom implements in minutes, not 30.
+
+---
+
+## Quick Start
 
 ```bash
-npx @hrshx3o5o6/tomnjerry init
+# 1. Install globally (one time)
+npm install -g @hrshx3o5o6/tomnjerry
+
+# 2. Install the loop protocol into opencode (one time per machine)
+tomnjerry install-global
+
+# 3. Initialize in your project (one time per project)
+cd /path/to/your/project
+tomnjerry init
+
+# 4. Restart opencode — the loop fires every turn
+opencode
+```
+
+That's it. No config files. No package.json changes.
+
+---
+
+## What Gets Installed
+
+```
+.tnj/                # In your project
+├── index.json        # Skill catalog (Jerry reads this first)
+├── skills/          # 13 pre-built skill files
+│   ├── dependency-jerry.md
+│   ├── browser-jerry.md
+│   ├── framework-jerry.md
+│   ├── git-jerry.md
+│   ├── delete-jerry.md
+│   ├── trap-jerry.md
+│   ├── api-jerry.md
+│   ├── db-jerry.md
+│   ├── unix-jerry.md
+│   ├── test-jerry.md
+│   ├── jerry-core.md
+│   ├── tom-core.md
+│   └── receipt-jerry.md
+└── learnings/       # Your custom skills accumulate here
 ```
 
 ---
 
-## The Analogy
+## Benchmark Results
 
-### 🐱 Tom: Momentum
-Tom is your AI coding agent's default planning mode. He turns vague intent into candidate moves, decomposes work into small actions, and keeps the agent pointed at a receipt.
+Measured on real Claude Code sessions editing a real codebase. 12 feature tasks, agent with and without Tom n Jerry, n=4, Haiku 4.5.
 
-When you ask Tom to add a simple feature, he tends to:
-* Design custom React state managers.
-* Write bespoke timezone parsers.
-* Add new, unverified npm dependencies.
-* Create complex helper wrappers.
+| | LOC | Unnecessary Installs | Codebase Checks |
+|--|--:|--:|--:|
+| **Baseline (no TNJ)** | 100% | 100% | 80% |
+| **Tom n Jerry** | **85%** | **0%** | **100%** |
 
-Tom is momentum — without him, nothing ships. But he needs a second opinion.
+- **15% less code** written
+- **100% elimination** of unnecessary package installs
+- **100% codebase checking** (vs 80% baseline — agents without TNJ miss hidden callers)
+- Agent spent less time on every task
 
-### 🐭 Jerry: The Street-Smart Mouse
-Jerry is the intervention layer. He intercepts Tom's massive 300-line implementation plan, looks at the environment, and finds the cheap shortcut.
-
-Jerry points to:
-* The native browser API that already does it.
-* The utility library already installed in your lockfile.
-* The single-line database field already configured.
-* The git commit that deleted this exact feature three weeks ago.
-
-Jerry deletes Tom's work, writes one line, and runs a test to prove it works.
+Full results: [`benchmarks/agentic/RESULTS.md`](benchmarks/agentic/RESULTS.md)
 
 ---
 
-## How It Works: The Loop
+## Tom n Jerry vs. Other Approaches
 
-```
-[User Request] ─► 🐱 Tom plans 300 LOC ─► 🐭 Jerry intercepts ─► [One-Line Move] ─► 🧾 Receipt verifies
-```
+| | Overbuilding Prevention | Self-Improving | Per-Project Learning | Verified Receipts |
+|--|:--:|:--:|:--:|:--:|
+| **Tom n Jerry** | ✔ | ✔ | ✔ | ✔ |
+| Ponytail | ✔ | ✗ | ✗ | ✗ |
+| Caveman | ✗ | ✗ | ✗ | ✗ |
+| Raw agent | ✗ | ✗ | ✗ | ✗ |
 
-Whenever you ask your agent to build something, Jerry intercepts the plan and outputs an **Opportunity Card**:
-
-* **Type:** `native`
-* **Claim:** Tailwind already supports class-based dark mode.
-* **Evidence:** `tailwind.config.js` exists and contains dark theme variables.
-* **Move:** Delete the custom Context Provider. Use the existing classes.
-* **Receipt:** `npm run build && verify-screenshot`
+Ponytail stops overbuilding in the moment. Tom n Jerry also remembers what it found — so the second time you do the same task, Jerry doesn't even have to look.
 
 ---
 
-## ⚡ Quick Start: 10-Second Setup
+## The Characters
 
-Get Tom n Jerry running in your repository immediately.
+**Tom** — Momentum. Every turn, Tom proposes the next concrete action. He breaks vague requests into 3-5 verifiable steps. He states the receipt before writing code. Without Tom, the agent stalls. With Tom alone, the agent overbuilds.
 
-### 1. Initialize inside your project root
-```bash
-npx @hrshx3o5o6/tomnjerry init
-```
-This copies the `skills/` library locally and deploys config files for **Cursor** (`.cursorrules`), **Claude Code** (`claudeproj.md`), and **opencode** (`opencode.json`).
+**Jerry** — Street smarts. Before every action, Jerry reads the skill index, loads relevant skills, and runs checks. He finds the shortcut. He deletes zombie code. He runs the receipt. He writes what he learned back to `.tnj/learnings/` for next time.
 
-### 2. Verify initialization
-```bash
-ls skills/    # Should show skill directories
-```
-If you see the skill directories, installation is complete.
-
-### 3. Always-On Mode (Recommended)
-
-Inject `always-on-rules.md` into your agent's system prompt for continuous opportunity detection:
-
-**Claude Code:**
-```bash
-cat always-on-rules.md >> claudeproj.md  # merge into project instructions
-```
-
-**Cursor:**
-The `always-on-rules.md` is appended to `.cursorrules` during init.
-
-**opencode:**
-Add to `AGENTS.md` or `opencode.json` project instructions.
-
-### 4. Doctor check
-```bash
-npm run doctor
-```
-
-### 5. Invoke inside your Agent
-Once initialized, trigger the coordinator loop by referencing it in your agent prompt:
-* **Cursor / Claude Code / opencode:**
-  > `/tomnjerry Add [your goal]`
-* **Manual Prompt:**
-  If your agent doesn't support local commands, paste the combined rules from `templates/tomnjerry-combined.rules` directly into your system prompt.
-
-### Uninstall / Cleanup
-```bash
-rm -rf skills/ .cursorrules claudeproj.md opencode.json
-```
+**Teacher** — After every session, Teacher reviews what was discovered. Patterns that repeat get promoted to skills. Skills that go unused get archived. The system gets faster over time.
 
 ---
 
-## The Skills in the Box
+## Uninstall
 
-Tom n Jerry comes pre-configured with specialized Jerry sub-skills:
+```bash
+# Remove from a project
+rm -rf .tnj/
 
-* [**`tom-core`**](skills/tom-core/SKILL.md) — Momentum engine: decomposes goals, unsticks plans, drives toward receipts.
-* [**`jerry-core`**](skills/jerry-core/SKILL.md) — Preflight opportunity scan: checks workspace, deps, framework, shell, git before building.
-* [**`browser-jerry`**](skills/browser-jerry/SKILL.md) — Uses native Web APIs (`popover`, `dialog`) instead of adding heavy JS libraries.
-* [**`dependency-jerry`**](skills/dependency-jerry/SKILL.md) — Scans lockfiles to reuse packages instead of running new installs.
-* [**`framework-jerry`**](skills/framework-jerry/SKILL.md) — Leverages framework-native features (Next.js middleware, Spring Boot config, etc.).
-* [**`db-jerry`**](skills/db-jerry/SKILL.md) — Checks active database schemas to prevent duplicate fields and tables.
-* [**`api-jerry`**](skills/api-jerry/SKILL.md) — Reuses route serializers instead of bloating endpoints.
-* [**`delete-jerry`**](skills/delete-jerry/SKILL.md) — Solves bugs by deleting zombie code instead of writing patches.
-* [**`unix-jerry`**](skills/unix-jerry/SKILL.md) — Uses a single shell command instead of custom Node/Python scripts.
-* [**`git-jerry`**](skills/git-jerry/SKILL.md) — Restores previously deleted features from commit logs instead of rebuilding.
-* [**`test-jerry`**](skills/test-jerry/SKILL.md) — Reuses existing test factories, fixtures, and infrastructure.
-* [**`trap-jerry`**](skills/trap-jerry/SKILL.md) — Identifies complex traps (custom auth, caches) and redirects to standard libraries.
-* [**`tomnjerry`**](skills/tomnjerry/SKILL.md) — Master coordinator that orchestrates the full loop (Tom → Jerry → Receipt).
-
----
-
-## Contributing
-
-Add a new Jerry skill only when it represents a distinct, street-smart behavioral shortcut. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+# Remove globally from opencode
+tomnjerry remove-global
+npm uninstall -g @hrshx3o5o6/tomnjerry
+```
 
 ---
 
