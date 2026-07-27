@@ -239,6 +239,9 @@ switch (command) {
   case 'remove-global':
     runRemoveGlobal();
     break;
+  case 'check-updates':
+    runCheckUpdates();
+    break;
   case '--help':
   case '-h':
     printHelp();
@@ -249,7 +252,7 @@ switch (command) {
     break;
   default:
     console.error(`Unknown command: ${command}`);
-    console.error('Usage: npx @hrshx3o5o6/tomnjerry [init|doctor|install-global|remove-global|--help|--version]');
+    console.error('Usage: npx @hrshx3o5o6/tomnjerry [init|doctor|check-updates|install-global|remove-global|--help|--version]');
     process.exit(1);
 }
 
@@ -489,6 +492,36 @@ function runRemoveGlobal() {
   console.log('✔ TNJ loop protocol removed from ~/.config/opencode/AGENTS.md');
 }
 
+// ─── Check Updates ────────────────────────────────────────────────────────────
+
+function runCheckUpdates() {
+  let resolved = false;
+  checkLatestVersion().then(latest => {
+    resolved = true;
+    if (!latest) {
+      console.log('ℹ Could not reach npm registry.');
+      process.exit(1);
+      return;
+    }
+    const current = PKG.version;
+    if (latest === current) {
+      console.log(`✔ You're on the latest version: ${current}`);
+      process.exit(0);
+    } else {
+      console.log(`⚠ Update available: ${latest} (installed: ${current})`);
+      console.log('  Run: npm install -g @hrshx3o5o6/tomnjerry@latest');
+      process.exit(1);
+    }
+  });
+  // Fallback if npm check hangs
+  setTimeout(() => {
+    if (!resolved) {
+      console.log('ℹ npm check timed out.');
+      process.exit(1);
+    }
+  }, 5000);
+}
+
 // ─── Help ──────────────────────────────────────────────────────────────────────
 
 function printHelp() {
@@ -498,6 +531,7 @@ Tom n Jerry — Self-improving loop engine for AI coding agents.
 Usage:
   npx @hrshx3o5o6/tomnjerry init              Initialize .tnj/ in project (skills + index)
   npx @hrshx3o5o6/tomnjerry doctor             Run diagnostic checks
+  npx @hrshx3o5o6/tomnjerry check-updates      Check npm for newer version
   npx @hrshx3o5o6/tomnjerry install-global     Install loop protocol to ~/.config/opencode/AGENTS.md
   npx @hrshx3o5o6/tomnjerry remove-global      Remove loop protocol from AGENTS.md
   npx @hrshx3o5o6/tomnjerry --help             Show this message

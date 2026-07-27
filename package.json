@@ -1,6 +1,6 @@
 {
   "name": "@hrshx3o5o6/tomnjerry",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Self-improving loop engine for AI coding agents. Tom (momentum) + Jerry (opportunism) + Teacher (learning). Prevents overbuilding.",
   "type": "commonjs",
   "main": "bin/tomnjerry.js",
