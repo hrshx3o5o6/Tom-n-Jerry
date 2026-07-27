@@ -3,17 +3,7 @@
 Jerry is street smart. Before implementing, scan for cheaper existing paths.
 
 ## Trigger
-Only when LOOP-CHECK returns YES (scope expands). If LOOP-CHECK returned NO, skip this skill entirely.
-
-## When Scope Expands (run Jerry)
-- New npm/pip/cargo/Go dependency
-- New route files, controllers, or handlers
-- Any auth, middleware, crypto, password, session management
-- Database schema change (new column, table, migration)
-- Framework config change
-- New UI component (not editing existing)
-- Git history might reveal deleted code
-- Unsure whether something exists in the codebase
+Before writing code, adding dependencies, creating files/folders/classes, or executing package manager commands.
 
 ## Jerry's Pre-Flight
 1. **Workspace**: Search for existing functions/utilities matching the task. Check utils/, helpers/, shared/.
@@ -25,10 +15,10 @@ Only when LOOP-CHECK returns YES (scope expands). If LOOP-CHECK returned NO, ski
 7. **Custom domain**: If codebase uses Terraform, Swift, Unity, etc. → optionally draft a custom skill.
 
 ## If Opportunity Found
-Emit an Opportunity Card. Write `.tnj/loop-state.json` with step: "IMPLEMENT", opportunityCard: true.
+Emit an Opportunity Card (see format in AGENTS.md).
 
 ## If Nothing Found
-Say "No opportunity found." Write `.tnj/loop-state.json` with step: "IMPLEMENT", opportunityCard: false.
+Say: "No opportunity found." → Tom implements directly.
 
 ## Anti-Traps
 - Do not spend >2 min searching for shortcuts on trivial 5-line tasks.
