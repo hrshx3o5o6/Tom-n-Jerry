@@ -224,10 +224,15 @@ Jerry reads this first to find relevant skills. Format:
 `;
 
 const command = process.argv[2];
+const flag = process.argv[3];
 
 switch (command) {
   case 'doctor':
-    runDoctor();
+    if (flag === '--loop') {
+      runDoctorLoop();
+    } else {
+      runDoctor();
+    }
     break;
   case 'init':
   case undefined:
@@ -340,6 +345,45 @@ function runDoctor() {
 
   console.log(allPassed ? '\n✔ All checks passed.' : '\n⚠ Some checks failed.');
   process.exit(allPassed ? 0 : 1);
+}
+
+function runDoctorLoop() {
+  const targetDir = process.cwd();
+  const loopStatePath = path.join(targetDir, '.tnj', 'loop-state.json');
+
+  console.log('🔄 Tom n Jerry — Loop Status\n');
+
+  if (!fs.existsSync(loopStatePath)) {
+    console.log('  ℹ No loop-state.json found.');
+    console.log('     The loop has not been started yet, or was run in a different session.\n');
+    return;
+  }
+
+  try {
+    const state = JSON.parse(fs.readFileSync(loopStatePath, 'utf-8'));
+    console.log(`  Step: ${state.step || 'unknown'}`);
+    if (state.proposal) console.log(`  Proposal: ${state.proposal}`);
+    if (state.receipt) console.log(`  Receipt: ${state.receipt}`);
+    if (state.opportunityCard !== null) {
+      console.log(`  Opportunity Card: ${state.opportunityCard ? 'true' : 'false'}`);
+    }
+    if (state.lastReceipt) {
+      console.log(`  Last Receipt: ${JSON.stringify(state.lastReceipt)}`);
+    }
+    if (state.learningsWritten && state.learningsWritten.length > 0) {
+      console.log(`  Learnings Written: ${state.learningsWritten.join(', ')}`);
+    }
+    if (state.sessionComplete !== undefined) {
+      console.log(`  Session Complete: ${state.sessionComplete}`);
+    }
+    if (state.pendingActions && state.pendingActions.length > 0) {
+      console.log(`  Pending Actions: ${state.pendingActions.join(', ')}`);
+    }
+    console.log('');
+  } catch (err) {
+    console.error(`  ✖ Failed to read loop-state.json: ${err.message}\n`);
+    process.exit(1);
+  }
 }
 
 function checkLatestVersion() {
@@ -531,6 +575,7 @@ Tom n Jerry — Self-improving loop engine for AI coding agents.
 Usage:
   npx @hrshx3o5o6/tomnjerry init              Initialize .tnj/ in project (skills + index)
   npx @hrshx3o5o6/tomnjerry doctor             Run diagnostic checks
+  npx @hrshx3o5o6/tomnjerry doctor --loop      Show current loop state
   npx @hrshx3o5o6/tomnjerry check-updates      Check npm for newer version
   npx @hrshx3o5o6/tomnjerry install-global     Install loop protocol to ~/.config/opencode/AGENTS.md
   npx @hrshx3o5o6/tomnjerry remove-global      Remove loop protocol from AGENTS.md
