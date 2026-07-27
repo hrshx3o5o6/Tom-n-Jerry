@@ -7,4 +7,5 @@ node_modules/
 *.log
 dev/
 wiki/
-.obsidian/
+.obsidian/## TNJ project copies
+.tnj/
