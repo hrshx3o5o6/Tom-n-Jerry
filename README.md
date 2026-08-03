@@ -15,9 +15,9 @@
   <a href="https://github.com/hrshx3o5o6/Tom-n-Jerry/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@hrshx3o5o6/tomnjerry.svg?style=flat-square&color=black" alt="MIT" /></a>
 </p>
 
-**Tom n Jerry** is a self-improving loop engine for AI coding agents. It runs on every turn — intercepting overbuilding, finding existing paths, and learning your codebase's patterns over time.
+**Tom n Jerry** stops your AI coding agent from overbuilding. It runs on every turn — intercepting unnecessary packages, finding existing code, and learning your codebase's patterns over time.
 
-Unlike a static ruleset, it gets smarter. After three sessions of "add rate limiting to auth routes," Jerry knows your codebase's Express setup and skips the research entirely.
+Unlike a static ruleset, it gets smarter. After three sessions of "add rate limiting to auth routes," Jerry knows your Express setup and skips the research entirely.
 
 ---
 
@@ -25,13 +25,9 @@ Unlike a static ruleset, it gets smarter. After three sessions of "add rate limi
 
 Your AI coding agent is capable. It's also an overbuilder.
 
-You ask for a login endpoint. It installs `passport-jwt`, writes a custom middleware, creates a token verification utility, and adds a session store — 400 lines of code. `package.json` had `bcryptjs` and `jsonwebtoken` already.
+You ask for a login endpoint. It installs `passport-jwt`, writes a custom middleware, creates a token verification utility, adds a session store — 400 lines of code. Your `package.json` already had `bcryptjs` and `jsonwebtoken`.
 
-This happens every session. On every task.
-
-**54% more code** than necessary. More dependencies. More attack surface. More to maintain.
-
-The agent doesn't know what your codebase already has.
+This happens every session. On every task. The agent doesn't know what your codebase already has.
 
 ---
 
@@ -84,41 +80,41 @@ Jerry emits an Opportunity Card:
       ▼
 ┌─────────────┐
 │   TOM        │  Proposes one concrete action.
-│  (Momentum)   │  "I'll add rate limiting to /api/auth/*"
-│               │  States the receipt: "curl -I proves it works."
+│  (Momentum)  │  "I'll add rate limiting to /api/auth/*"
+│              │  States the receipt: "curl -I proves it works."
 └──────┬──────┘
        │
        ▼
 ┌─────────────┐
-│   JERRY      │  Reads .tnj/index.json, matches skills,
+│   JERRY     │  Reads .tnj/index.json, matches skills,
 │(Street Smart)│  runs checks on package.json, git history,
-│              │  native APIs, framework config.
+│             │  native APIs, framework config.
 └──────┬──────┘
        │
        ├─ Shortcut found ──► Opportunity Card ──► Tom implements
        │
        └─ No shortcut ──► Tom implements directly
-                                   │
-                                   ▼
-                        ┌─────────────────┐
-                        │    RECEIPT       │
-                        │  (Proof)        │
-                        │ curl -I ...      │
-                        │ HTTP 429 OK     │
-                        └────────┬────────┘
-                                 │
-                                 ▼
-                        ┌─────────────────┐
-                        │   TEACHER       │
-                        │  (Learning)     │
-                        │ Pattern worth   │
-                        │ remembering?   │
-                        │ Write .tnj/    │
-                        │ learnings/      │
-                        └────────┬────────┘
-                                 │
-                                 ▼
-                           Next action
+                               │
+                               ▼
+                    ┌─────────────────┐
+                    │    RECEIPT     │
+                    │   (Proof)      │
+                    │ curl -I ...    │
+                    │ HTTP 429 OK    │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   TEACHER       │
+                    │  (Learning)     │
+                    │ Pattern worth   │
+                    │ remembering?    │
+                    │ Write .tnj/    │
+                    │ learnings/     │
+                    └────────┬────────┘
+                             │
+                             ▼
+                       Next action
 ```
 
 ### The Ladder (What Jerry Checks)
@@ -184,8 +180,8 @@ That's it. No config files. No package.json changes.
 
 ```
 .tnj/                # In your project
-├── index.json        # Skill catalog (Jerry reads this first)
-├── skills/          # 13 pre-built skill files
+├── index.json         # Skill catalog (Jerry reads this first)
+├── skills/           # 13 pre-built skill files
 │   ├── dependency-jerry.md
 │   ├── browser-jerry.md
 │   ├── framework-jerry.md
@@ -199,26 +195,21 @@ That's it. No config files. No package.json changes.
 │   ├── jerry-core.md
 │   ├── tom-core.md
 │   └── receipt-jerry.md
-└── learnings/       # Your custom skills accumulate here
+└── learnings/        # Your custom skills accumulate here
 ```
 
 ---
 
-## Benchmark Results
+## Benchmarks
 
-Measured on real Claude Code sessions editing a real codebase. 12 feature tasks, agent with and without Tom n Jerry, n=4, Haiku 4.5.
+Tom n Jerry's value is only visible in **multi-turn agentic sessions** — where the loop fires on every step across a real coding task. Single-shot benchmarks (one prompt → one response) measure none of this.
 
-| | LOC | Unnecessary Installs | Codebase Checks |
-|--|--:|--:|--:|
-| **Baseline (no TNJ)** | 100% | 100% | 80% |
-| **Tom n Jerry** | **85%** | **0%** | **100%** |
+**Multi-turn agentic benchmarks are in progress.** We're building a reproducible benchmark suite that measures:
+- Rate of unnecessary package installs across a 10-task feature development session
+- Lines of code written vs. necessary minimum
+- Time saved on repeated patterns
 
-- **15% less code** written
-- **100% elimination** of unnecessary package installs
-- **100% codebase checking** (vs 80% baseline — agents without TNJ miss hidden callers)
-- Agent spent less time on every task
-
-Full results: [`benchmarks/agentic/RESULTS.md`](benchmarks/agentic/RESULTS.md)
+Follow [`benchmarks/agentic/`](benchmarks/agentic/) for methodology and results as they publish.
 
 ---
 
@@ -253,8 +244,16 @@ rm -rf .tnj/
 
 # Remove globally from opencode
 tomnjerry remove-global
+
+# Uninstall the npm package
 npm uninstall -g @hrshx3o5o6/tomnjerry
 ```
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and PR guidelines.
 
 ---
 

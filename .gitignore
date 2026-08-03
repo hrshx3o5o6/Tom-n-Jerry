@@ -7,5 +7,10 @@ node_modules/
 *.log
 dev/
 wiki/
-.obsidian/## TNJ project copies
+.obsidian/
+## TNJ project copies
 .tnj/
+# Launch copy (copy-paste ready, not committed)
+LAUNCH.md
+# Research files
+solo-dev-oss-viral-growth-research.md
