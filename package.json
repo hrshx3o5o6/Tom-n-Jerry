@@ -1,6 +1,6 @@
 {
   "name": "@hrshx3o5o6/tomnjerry",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Stops your AI coding agent from overbuilding. Loop engine that finds existing code, skips unnecessary packages, and learns your codebase over time.",
   "type": "commonjs",
   "main": "bin/tomnjerry.js",
