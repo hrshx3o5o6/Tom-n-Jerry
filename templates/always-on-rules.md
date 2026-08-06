@@ -1,3 +1,7 @@
+[TNJ LOOP ENFORCEMENT] You MUST read .tnj/loop-state.json FIRST before any other tool. The FIRST tool call of every turn MUST restore loop context.
+
+---
+
 # TNJ: Tom n Jerry Loop Engine
 
 YOU MUST RUN THIS LOOP EVERY TURN.
@@ -8,52 +12,52 @@ Every user request runs through these states in order. Each state has a mandator
 
 ```
                    User Request
-                        │
-                        ▼
-                    ┌───────┐
-        ┌───────────│  TOM   │
-        │           │propose │
-        │           └───┬───┘
-        │               │
-        │               ▼
-        │           ┌───────┐
-        │           │ LOOP- │  ← DECISION POINT
-        │           │ CHECK │
-        │           └───┬───┘
-        │               │
-        │        ┌──────┴──────┐
-        │        │             │
-        │   Scope expands  Scope same
-        │        │             │
-        │        ▼             │
-        │   ┌────────┐         │
-        │   │ JERRY  │         │
-        │   │ scan   │         │
-        │   └───┬────┘         │
-        │       │              │
-        │   ┌───┴────┐         │
-        │   │ Card │  │        │
-        │   └───┬────┘         │
-        │       │              │
-        └───┐───┘              │
-            │                  │
-            ▼                  │
-        ┌───────┐              │
-        │ IMPLE-│◄─────────────┘
-        │  MENT │
-        └───┬───┘
-            │
-            ▼
-        ┌───────┐
-        │RECEIPT│
-        └───┬───┘
-            │
-            ▼
-        ┌───────┐
-        │TEACHER│  ← reflects, writes .tnj/loop-state.json
-        └───┬───┘
-            │
-            └──────→ Back to TOM (next action or idle)
+                         │
+                         ▼
+                     ┌───────┐
+         ┌───────────│  TOM   │
+         │           │propose │
+         │           └───┬───┘
+         │               │
+         │               ▼
+         │           ┌───────┐
+         │           │ LOOP- │  ← DECISION POINT
+         │           │ CHECK │
+         │           └───┬───┘
+         │               │
+         │        ┌──────┴──────┐
+         │        │             │
+         │   Scope expands  Scope same
+         │        │             │
+         │        ▼             │
+         │   ┌────────┐         │
+         │   │ JERRY  │         │
+         │   │ scan   │         │
+         │   └───┬────┘         │
+         │       │              │
+         │   ┌───┴────┐         │
+         │   │ Card │  │        │
+         │   └───┬────┘         │
+         │       │              │
+         └───┐───┘              │
+             │                  │
+             ▼                  │
+         ┌───────┐              │
+         │ IMPLE- │◄─────────────┘
+         │  MENT  │
+         └───┬───┘
+             │
+             ▼
+         ┌───────┐
+         │RECEIPT│
+         └───┬───┘
+             │
+             ▼
+         ┌───────┐
+         │TEACHER│  ← MUST produce output after EVERY task
+         └───┬───┘
+             │
+             └──────→ Back to TOM (next action or idle)
 ```
 
 ## State Definitions
@@ -124,17 +128,28 @@ Write `.tnj/loop-state.json`:
 { "step": "TEACHER", "lastReceipt": { "command": "curl ...", "result": "PASS" } }
 ```
 
+Then Teacher runs and MUST produce output (see Teacher step).
+
 ### 5. Teacher (Learning)
-After completing a full task (not each step), reflect:
-- Did we discover a non-obvious pattern worth remembering?
-- Would this apply to 2+ future tasks?
-If yes → write `.tnj/learnings/<topic>.md` (concise, 5-15 lines).
-Then append the new skill entry to `.tnj/index.json`.
+After every task completion (Receipt passed), Teacher MUST produce output:
+
+**Option A — Learning found:**
+Write `.tnj/learnings/<topic>.md` (5-15 lines, concrete pattern + trigger + action).
+Then append to `.tnj/index.json`.
+
+**Option B — No pattern found:**
+Set `learningsSkipped: true` with explicit reason in loop-state.json.
+
+**There is no Option C. Skipping is not optional.**
 
 Write `.tnj/loop-state.json`:
 ```json
-{ "step": "TOM", "sessionComplete": false, "pendingActions": [], "learningsWritten": ["<topic>"] }
+{ "step": "TOM", "learningsWritten": ["<topic>"], "learningsSkipped": false }
+// OR
+{ "step": "TOM", "learningsSkipped": true, "learningsSkipReason": "<why no pattern>" }
 ```
+
+Receipt: Either a learnings file exists in `.tnj/learnings/` OR `learningsSkipped: true` with non-empty reason.
 
 ### 6. Loop
 After Teacher → loop back to Tom for next action.
@@ -150,6 +165,16 @@ If the file exists and `step` is not `TOM` → resume from that state.
 If the file doesn't exist → start fresh.
 
 This enables multi-session persistence: Session A writes `{ step: "RECEIPT" }`, Session B resumes from RECEIPT.
+
+**Required fields per step:**
+
+| Step | Required Fields |
+|------|----------------|
+| TOM | `step`, `proposal`, `receipt` |
+| LOOP-CHECK | `step` |
+| JERRY | `step`, `opportunityCard` |
+| IMPLEMENT | `step`, `proposal`, `receipt`, `opportunityCard` |
+| TEACHER | `step`, `lastReceipt` — THEN Teacher produces: `learningsWritten` array OR `learningsSkipped: true` + `learningsSkipReason` |
 
 ## Opportunity Card Format
 
@@ -194,5 +219,5 @@ Jerry reads this first to find relevant skills. Format:
 - Tom without Jerry = overbuilding. Always scan when scope expands.
 - Jerry without Tom = analysis paralysis. Always implement after scanning.
 - Receipt without a command = "it built" ≠ it works. Always run verification.
-- Learning without a trigger = noise. Only save genuine patterns.
+- Teacher with no output = violation. Always write learnings OR skip with explicit reason.
 - Loop without state file write = state loss. Always write after every step.
