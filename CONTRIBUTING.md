@@ -2,104 +2,83 @@
 
 Tom n Jerry grows by adding narrow behavioral primitives.
 
-
 Each new skill should make agents notice a specific class of opportunity before they build.
+
+## Skill Format
+
+Skills live in `tnj/skills/` (published to npm) and `.tnj/skills/` (project copy).
+
+Each skill is a Markdown file with:
+
+- **Trigger**: When does this skill fire?
+- **Checks**: Concrete steps Jerry runs
+- **Action**: What Jerry does if a shortcut is found
 
 ## New Skill Rules
 
-- One skill per behavioral primitive.
-- Keep the mission narrow.
-- Make the trigger condition explicit.
-- Use concrete checks.
-- Prefer opportunity cards as output.
-- Require evidence.
-- Require receipts.
-- Avoid runtime-specific assumptions in core skills.
-- Put agent-specific advice in compatibility docs.
+- One skill per behavioral primitive
+- Keep the mission narrow
+- Make the trigger condition explicit
+- Use concrete checks
+- Prefer opportunity cards as output
+- Require evidence
+- Require receipts
 
 ## Skill Template
 
 ```markdown
----
-name: <skill-name>
-description: <when to use this skill>
----
+# <skill-name>
 
-# <Skill Title>
-
-## Mission
-
-<One-paragraph behavioral mission.>
+## Trigger
+Before [action], run this skill.
 
 ## Checks
+1. Check [specific file/pattern/API]
+2. Check [another affordance]
 
-- <Concrete check 1>
-- <Concrete check 2>
-- <Concrete check 3>
-
-## Opportunity Card Bias
-
-Prefer cards of type: <types>.
-
-## Guardrails
-
-- Cite evidence.
-- Preserve correctness.
-- Require receipts.
+## Action
+- Shortcut found → emit Opportunity Card
+- Nothing found → Tom implements
 ```
-
-## New Skill Checklist
-
-- [ ] The skill has a narrow behavioral mission.
-- [ ] The trigger condition is clear.
-- [ ] The checks are concrete.
-- [ ] The skill emits or informs opportunity cards.
-- [ ] The skill requires evidence.
-- [ ] The skill requires receipts.
-- [ ] The skill is portable across agents.
 
 ## Good Fit
 
-A good Jerry skill says:
-
-> Before building this class of thing, check this existing affordance.
+A good Jerry skill says: "Before building this class of thing, check this existing affordance."
 
 Examples:
 
-- browser-native behavior
-- package-manager scripts
-- existing database schema
-- existing test helpers
-- deleted code in git history
-- framework configuration
-- database triggers or security rules
-- domain-specific languages (IaC, Unity/C#, mobile native layouts)
+- package.json for existing dependencies
+- browser native behavior (`<input type="date">`)
+- framework config conventions
+- git history for deleted code
+- database schema already exists
+- shell tools (rg, jq, awk)
 
 ## Poor Fit
 
-A poor Jerry skill says:
-
 > Be better at engineering.
 
-That is too broad to be useful.
+That's too broad to be useful.
 
----
+## Running Tests
 
-## Agent Self-Generation Guidelines (Dynamic Adaptability)
+```bash
+npm test          # Run doctor + version check
+npm run doctor    # Just the doctor checks
+```
 
-If you are an AI coding agent operating in a workspace that is out of scope of the pre-existing 12 skills (e.g., you are building a Unity 3D game, a Swift SwiftUI app, or a Terraform architecture plan), you are authorized and encouraged to self-generate a new local Jerry skill.
+## Submitting Changes
 
-### Steps to Self-Generate:
+1. Fork the repo
+2. Make your change
+3. Run `npm test` — must pass
+4. Submit a PR
 
-1. **Identify the Gap:** Recognize a repetitive abstraction, boilerplate code pattern, or environment affordance unique to the workspace's domain.
-2. **Scaffold Local Custom Skill:**
-   - Create folder: `skills/custom-<domain-name>/`
-   - Create file: `skills/custom-<domain-name>/SKILL.md`
-3. **Write Using the Robust Template:**
-   - Define concrete domain-specific triggers.
-   - Outline concrete checks (e.g., search patterns, CLI targets).
-   - Write a Before/After Inline Scenario showing how this skill intercepts naive implementation patterns.
-   - Outline common Antipattern Traps.
-   - Define concrete Receipt Targets.
-4. **Register locally:** Commit the new skill file back to the repository. Future runs in the workspace will automatically trigger it.
+## Reporting Issues
 
+Open an issue at https://github.com/hrshx3o5o6/Tom-n-Jerry/issues
+
+Include:
+- What you expected vs what happened
+- opencode version and TNJ version (`tomnjerry doctor`)
+- Steps to reproduce
