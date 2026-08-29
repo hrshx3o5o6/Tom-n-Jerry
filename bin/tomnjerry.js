@@ -128,10 +128,17 @@ Then write \`.tnj/loop-state.json\`:
 ### 3. Jerry (Street Smarts)
 Only runs when LOOP-CHECK returned YES (scope expands).
 
-Read \`.tnj/index.json\`. Match the current task intent + tech stack to skill keywords.
-For each matching skill: read \`.tnj/skills/<skill>.md\`, run its checks.
+Read \`.tnj/index.json\` — the FULL catalog including any learnings entries. Match the current task intent + tech stack against ALL entries' trigger + keywords.
+
+For each matching entry:
+- If \`path\` starts with \`skills/\` → read \`.tnj/skills/<skill>.md\`
+- If \`path\` starts with \`learnings/\` → read \`.tnj/learnings/<topic>.md\`
+
+Run the checks from the loaded file.
 - If a shortcut exists → emit Opportunity Card → Tom implements the shortcut.
 - If no shortcut → Tom implements directly.
+
+**Never skip learnings.** Learnings accumulate across projects and contain the most task-specific patterns. Check them on every JERRY scan.
 
 Write \`.tnj/loop-state.json\`:
 \`\`\`json
@@ -154,8 +161,8 @@ Then Teacher runs and MUST produce output (see Teacher step).
 After every task completion (Receipt passed), Teacher MUST produce output:
 
 **Option A — Learning found:**
-Write \`.tnj/learnings/<topic>.md\` (5-15 lines, concrete pattern + trigger + action).
-Then append to \`.tnj/index.json\`.
+Write \`.tnj/learnings/<topic>.md\` (5-15 lines, concrete pattern + trigger + action + checks).
+THEN append the new skill entry to \`.tnj/index.json\` with its trigger + keywords so JERRY can find it later. This is mandatory — a learning file not in the index is never read again.
 
 **Option B — No pattern found:**
 Set \`learningsSkipped: true\` with explicit reason in loop-state.json.

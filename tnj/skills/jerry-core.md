@@ -24,6 +24,9 @@ Only when LOOP-CHECK returns YES (scope expands). If LOOP-CHECK returned NO, ski
 6. **Git history**: Run git log --grep=<feature>. The feature may have existed before.
 7. **Custom domain**: If codebase uses Terraform, Swift, Unity, etc. → optionally draft a custom skill.
 
+## Read Skills AND Learnings
+Read `.tnj/index.json` (full catalog incl. learnings entries). For each matching entry, read `.tnj/skills/<name>.md` OR `.tnj/learnings/<name>.md`. Never skip learnings — they hold the most task-specific patterns.
+
 ## If Opportunity Found
 Emit an Opportunity Card. Write `.tnj/loop-state.json` with step: "IMPLEMENT", opportunityCard: true.
 
