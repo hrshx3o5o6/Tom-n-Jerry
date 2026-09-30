@@ -57,9 +57,17 @@ function classifyTool(name, input) {
   return { kind: 'other', name };
 }
 
+// Codex exec results are plain text such as "Process exited with code 1".
+const EXIT_TEXT_RE = /exit(?:ed)?(?: with)?(?: status| code)[:\s]+(-?\d+)/i;
+
+function exitFromText(text) {
+  const m = EXIT_TEXT_RE.exec(text || '');
+  return m ? Number(m[1]) : undefined;
+}
+
 function resultOf(r) {
   if (r == null) return {};
-  if (typeof r === 'string') return { output: r };
+  if (typeof r === 'string') return { output: r, exitCode: exitFromText(r) };
   const exit = [r.exit_code, r.exitCode, r.returncode, r.code, r.exit].find(v => Number.isInteger(v));
   let output = [r.stdout, r.stderr].filter(v => typeof v === 'string' && v).join('\n');
   if (!output) {

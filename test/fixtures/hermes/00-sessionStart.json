@@ -1,0 +1,12 @@
+{
+  "hook_event_name": "on_session_start",
+  "tool_name": null,
+  "tool_input": null,
+  "session_id": "20260930_101500_ab12cd",
+  "cwd": "{{ROOT}}",
+  "profile": "default",
+  "extra": {
+    "platform": "cli",
+    "model": "hermes-4"
+  }
+}

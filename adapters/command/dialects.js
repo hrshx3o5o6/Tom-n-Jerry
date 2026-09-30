@@ -4,10 +4,13 @@
 // harness can do. `toolContext`: can inject model context before a tool runs.
 // `deliverAfterTool`: can append context to a tool result. `sessionStart`: has a
 // session-start event.
+// `aliases`: other native events that map onto the same canonical event.
 const HARNESSES = {
   claude: {
     dialect: 'claude',
     events: { sessionStart: 'SessionStart', prompt: 'UserPromptSubmit', toolBefore: 'PreToolUse', toolAfter: 'PostToolUse', stop: 'Stop' },
+    // Failed tool calls fire PostToolUseFailure instead of PostToolUse.
+    aliases: { toolAfter: ['PostToolUseFailure'] },
     capabilities: { toolContext: true, sessionStart: true },
   },
   codex: {
@@ -18,7 +21,8 @@ const HARNESSES = {
   hermes: {
     dialect: 'claude',
     events: { sessionStart: 'on_session_start', prompt: 'pre_llm_call', toolBefore: 'pre_tool_call', toolAfter: 'post_tool_call', stop: 'pre_verify' },
-    capabilities: { toolContext: false, sessionStart: true },
+    // on_session_start is observe-only, so the full summary rides on the first pre_llm_call.
+    capabilities: { toolContext: false, sessionStart: false },
   },
 };
 
@@ -49,4 +53,9 @@ function claudeSerialize(decision, event, harness) {
 
 const SERIALIZERS = { claude: claudeSerialize };
 
-module.exports = { HARNESSES, SERIALIZERS };
+function acceptsEvent(harness, event, native) {
+  const h = HARNESSES[harness];
+  return h.events[event] === native || ((h.aliases && h.aliases[event]) || []).includes(native);
+}
+
+module.exports = { HARNESSES, SERIALIZERS, acceptsEvent };

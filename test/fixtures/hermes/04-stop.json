@@ -1,0 +1,11 @@
+{
+  "hook_event_name": "pre_verify",
+  "tool_name": null,
+  "tool_input": null,
+  "session_id": "20260930_101500_ab12cd",
+  "cwd": "{{ROOT}}",
+  "profile": "default",
+  "extra": {
+    "turn_id": "1"
+  }
+}

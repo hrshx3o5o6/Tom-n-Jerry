@@ -128,6 +128,7 @@ const claude = jsonHookHarness({
     UserPromptSubmit: [{ hooks: [cmd('prompt', h)] }],
     PreToolUse: [{ matcher: 'Bash', hooks: [cmd('toolBefore', h)] }],
     PostToolUse: [{ matcher: 'Bash|Write|Edit|MultiEdit|NotebookEdit', hooks: [cmd('toolAfter', h)] }],
+    PostToolUseFailure: [{ matcher: 'Bash|Write|Edit|MultiEdit|NotebookEdit', hooks: [cmd('toolAfter', h)] }],
     Stop: [{ hooks: [cmd('stop', h)] }],
   }),
 });

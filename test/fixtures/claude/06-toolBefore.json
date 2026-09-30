@@ -1,0 +1,17 @@
+{
+  "session_id": "4b75b63c-64fa-4b97-82cf-57ee14fbd925",
+  "transcript_path": "{{ROOT}}/transcript.jsonl",
+  "cwd": "{{ROOT}}",
+  "prompt_id": "8282e35c-3a51-4acd-8b2d-fbb19c9fbb48",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "node --check src/limit.js && echo SYNTAX_OK; ls node_modules 2>&1 | head",
+    "description": "Check the file's syntax and whether node_modules exists"
+  },
+  "tool_use_id": "toolu_01QZoWa1hYeiUnYMBEcyazxS"
+}

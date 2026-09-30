@@ -2,7 +2,7 @@
 
 const { handle } = require('../../core/engine');
 const { classifyTool, resultOf } = require('../tools');
-const { HARNESSES, SERIALIZERS } = require('./dialects');
+const { HARNESSES, SERIALIZERS, acceptsEvent } = require('./dialects');
 
 const EVENTS = new Set(['sessionStart', 'prompt', 'toolBefore', 'toolAfter', 'stop']);
 
@@ -29,7 +29,7 @@ function normalize(payload, event, harness) {
     cwd: p.cwd || workspace || process.cwd(),
     prompt: p.prompt || p.user_message || extra.user_message || '',
     tool: toolName ? classifyTool(toolName, toolInput) : undefined,
-    result: resultOf(p.tool_response || p.toolResponse || p.tool_output || p.result),
+    result: resultOf(p.tool_response || p.toolResponse || p.tool_output || p.result || extra.result || (p.error != null ? String(p.error) : undefined)),
     stopHookActive: Boolean(p.stop_hook_active),
     capabilities: HARNESSES[harness].capabilities,
   };
@@ -46,8 +46,7 @@ function runHook(argv, stdinText, env = process.env) {
     if (stdinText && stdinText.trim()) {
       try { payload = JSON.parse(stdinText); } catch { return ''; }
     }
-    const expected = HARNESSES[harness].events[event];
-    if (payload.hook_event_name && payload.hook_event_name !== expected) return '';
+    if (payload.hook_event_name && !acceptsEvent(harness, event, payload.hook_event_name)) return '';
     const decision = handle(normalize(payload, event, harness), env);
     const out = serialize(decision, event, harness);
     return out ? JSON.stringify(out) + '\n' : '';

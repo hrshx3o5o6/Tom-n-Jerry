@@ -1,0 +1,15 @@
+{
+  "session_id": "019a-codex-session",
+  "transcript_path": null,
+  "cwd": "{{ROOT}}",
+  "model": "gpt-5.3-codex",
+  "permission_mode": "default",
+  "turn_id": "turn-1",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "apply_patch",
+  "tool_input": {
+    "command": "*** Begin Patch\n*** Update File: src/index.js\n@@\n-const express = require('express');\n+const express = require('express');\n+const rateLimit = require('express-rate-limit');\n*** End Patch\n"
+  },
+  "tool_response": "Success. Updated the following files:\nM src/index.js\n",
+  "tool_use_id": "call_2"
+}

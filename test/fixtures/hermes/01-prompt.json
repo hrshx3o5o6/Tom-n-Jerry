@@ -1,0 +1,14 @@
+{
+  "hook_event_name": "pre_llm_call",
+  "tool_name": null,
+  "tool_input": null,
+  "session_id": "20260930_101500_ab12cd",
+  "cwd": "{{ROOT}}",
+  "profile": "default",
+  "extra": {
+    "user_message": "add rate limiting to the auth routes",
+    "is_first_turn": true,
+    "model": "hermes-4",
+    "platform": "cli"
+  }
+}

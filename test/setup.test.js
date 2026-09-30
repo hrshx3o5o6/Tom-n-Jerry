@@ -22,7 +22,7 @@ test('setup wires Claude Code, Codex and Hermes and scaffolds the project', asyn
   assert.equal(await run(setup, ['--harness', 'claude,codex,hermes'], home, root), 0);
 
   const claude = readJSON(path.join(home, '.claude', 'settings.json'));
-  assert.deepEqual(Object.keys(claude.hooks).sort(), ['PostToolUse', 'PreToolUse', 'SessionStart', 'Stop', 'UserPromptSubmit']);
+  assert.deepEqual(Object.keys(claude.hooks).sort(), ['PostToolUse', 'PostToolUseFailure', 'PreToolUse', 'SessionStart', 'Stop', 'UserPromptSubmit']);
   const pre = claude.hooks.PreToolUse[0];
   assert.equal(pre.matcher, 'Bash');
   assert.match(pre.hooks[0].command, /^"[^"]+" "[^"]+tomnjerry\.js" hook toolBefore --dialect claude --harness claude$/);

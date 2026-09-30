@@ -1,0 +1,14 @@
+{
+  "hook_event_name": "pre_tool_call",
+  "tool_name": "terminal",
+  "tool_input": {
+    "command": "npm install express-rate-limit"
+  },
+  "session_id": "20260930_101500_ab12cd",
+  "cwd": "{{ROOT}}",
+  "profile": "default",
+  "extra": {
+    "tool_call_id": "tc_1",
+    "turn_id": "1"
+  }
+}
