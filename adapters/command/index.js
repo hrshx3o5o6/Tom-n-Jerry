@@ -22,15 +22,19 @@ function normalize(payload, event, harness) {
   const toolName = p.tool_name || p.toolName || toolCall.name;
   const toolInput = p.tool_input || p.toolInput || toolCall.args || toolCall.input || {};
   const workspace = Array.isArray(p.workspacePaths) ? p.workspacePaths[0] : undefined;
+  const commandCwd = typeof toolInput.Cwd === 'string' ? toolInput.Cwd : undefined;
   return {
     event,
     harness,
     sessionId: p.session_id || p.sessionId || p.conversationId || extra.session_id || null,
-    cwd: p.cwd || workspace || process.cwd(),
+    cwd: p.cwd || commandCwd || workspace || process.cwd(),
     prompt: p.prompt || p.user_message || extra.user_message || '',
     tool: toolName ? classifyTool(toolName, toolInput) : undefined,
-    result: resultOf(p.tool_response || p.toolResponse || p.tool_output || p.result || extra.result || (p.error != null ? String(p.error) : undefined)),
-    stopHookActive: Boolean(p.stop_hook_active),
+    result: resultOf(p.tool_response || p.toolResponse || p.tool_output || p.result || extra.result || (p.error ? String(p.error) : undefined)),
+    // Antigravity: fullyIdle=false means background work is still running.
+    stopHookActive: Boolean(p.stop_hook_active) || p.fullyIdle === false,
+    // Antigravity fires PreInvocation before every model call; only the first starts a turn.
+    midTurn: event === 'prompt' && Number.isInteger(p.invocationNum) && p.invocationNum > 0,
     capabilities: HARNESSES[harness].capabilities,
   };
 }

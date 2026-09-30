@@ -478,7 +478,7 @@ function runInit() {
 
     console.log('\n🐱 Tom n Jerry initialization complete!');
     console.log(`   Project .tnj/ has ${packageSkillIds().length} skills and the index.`);
-    console.log('   Hooks (Claude Code, Codex, Hermes): tomnjerry setup');
+    console.log('   Hooks for Claude Code, Codex, Hermes, opencode, Pi, Gemini CLI, Antigravity: tomnjerry setup');
     console.log('   opencode (AGENTS.md protocol): tomnjerry install-global, then restart opencode.');
     console.log('   Verify: tomnjerry doctor');
 
@@ -578,7 +578,7 @@ Install:
 
 Usage:
   tomnjerry setup [options]    Wire hooks into your agent harnesses and enable this project
-      --harness a,b              Pick harnesses (claude, codex, hermes); default: detected
+      --harness a,b              Pick harnesses (claude, codex, hermes, opencode, pi, gemini, agy); default: detected
       --all                      All supported harnesses
       --project / --no-project   Scaffold .tnj/ here (default: yes inside a repo)
       --project-hooks            Hooks for this project only (default: all projects)

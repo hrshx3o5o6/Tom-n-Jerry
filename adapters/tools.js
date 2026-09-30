@@ -72,10 +72,11 @@ function resultOf(r) {
   let output = [r.stdout, r.stderr].filter(v => typeof v === 'string' && v).join('\n');
   if (!output) {
     if (typeof r.output === 'string') output = r.output;
+    else if (typeof r.llmContent === 'string') output = r.llmContent;
     else if (Array.isArray(r.content)) output = r.content.map(c => (c && c.text) || '').join('\n');
     else if (typeof r.content === 'string') output = r.content;
   }
-  return { output, exitCode: exit };
+  return { output, exitCode: exit !== undefined ? exit : exitFromText(output) };
 }
 
 module.exports = { classifyTool, resultOf, commandOf, pathsOf };

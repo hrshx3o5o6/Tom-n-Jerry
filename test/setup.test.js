@@ -155,6 +155,38 @@ test('opencode + Pi: shims installed, legacy AGENTS.md block removed, doctor smo
   assert.equal(fs.existsSync(piShim), false);
 });
 
+test('Gemini CLI + Antigravity: configs written in their own shapes; doctor smoke passes', async () => {
+  const home = tmpdir();
+  write(home, '.gemini/config/hooks.json', { 'my-linter': { PostToolUse: [{ matcher: 'run_command', hooks: [{ command: './lint.sh' }] }] } });
+  await run(setup, ['--harness', 'gemini,agy', '--no-project'], home, home);
+
+  const g = readJSON(path.join(home, '.gemini', 'settings.json'));
+  assert.equal(g.hooks.BeforeTool[0].matcher, 'run_shell_command');
+  assert.equal(g.hooks.BeforeTool[0].hooks[0].timeout, 10000, 'Gemini timeouts are milliseconds');
+  assert.equal(g.hooks.AfterAgent[0].hooks[0].name, 'tomnjerry-stop');
+
+  const a = readJSON(path.join(home, '.gemini', 'config', 'hooks.json'));
+  assert.ok(a['my-linter'], 'other hook entries preserved');
+  assert.equal(a.tomnjerry.PreInvocation[0].type, 'command', 'invocation handlers sit directly under the event');
+  assert.equal(a.tomnjerry.PreToolUse[0].hooks[0].timeout, 10, 'Antigravity timeouts are seconds');
+
+  const logs = [];
+  assert.equal(checkHooks({ home, root: home, log: m => logs.push(m) }), true, logs.join('\n'));
+
+  await run(remove, ['--harness', 'agy'], home, home);
+  assert.deepEqual(Object.keys(readJSON(path.join(home, '.gemini', 'config', 'hooks.json'))), ['my-linter']);
+});
+
+test('remove keeps shared ~/.agents/skills while another harness still uses them', async () => {
+  const home = tmpdir();
+  await run(setup, ['--harness', 'codex,gemini', '--no-project'], home, home);
+  const skill = path.join(home, '.agents', 'skills', 'tnj-tom-core', 'SKILL.md');
+  await run(remove, ['--harness', 'gemini'], home, home);
+  assert.ok(fs.existsSync(skill), 'Codex still needs them');
+  await run(remove, ['--harness', 'codex'], home, home);
+  assert.equal(fs.existsSync(skill), false);
+});
+
 test('remove never deletes a user file that happens to share the shim name', async () => {
   const home = tmpdir();
   const mine = write(home, '.config/opencode/plugins/tomnjerry.js', 'export const Mine = async () => ({});\n');

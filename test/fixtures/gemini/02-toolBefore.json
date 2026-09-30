@@ -1,0 +1,12 @@
+{
+  "session_id": "8f1e2c4a-gemini",
+  "transcript_path": "{{ROOT}}/.gemini/tmp/chat.json",
+  "cwd": "{{ROOT}}",
+  "timestamp": "2026-09-30T10:15:00.000Z",
+  "hook_event_name": "BeforeTool",
+  "tool_name": "run_shell_command",
+  "tool_input": {
+    "command": "npm install express-rate-limit",
+    "description": "Install rate limiter"
+  }
+}

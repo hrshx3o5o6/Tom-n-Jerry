@@ -6,7 +6,7 @@ const { pathToFileURL, fileURLToPath } = require('url');
 const {
   readJson, readText, writeJson, writeWithBackup, hookCommand, isTnjCommand, commandPaths, onPath,
 } = require('./fsutil');
-const { installSkillCopies, removeSkillCopies } = require('./scaffold');
+const { installSkillCopies } = require('./scaffold');
 
 // ─── Claude-style hooks.json / settings.json ─────────────────────────────────
 
@@ -63,14 +63,15 @@ function commandProblems(commands) {
   return [...new Set(problems)];
 }
 
-function jsonHookHarness({ id, label, dirName, binName, configFile, projectConfigFile, skillsDir, projectSkillsDir, build, trust, extraStatus }) {
+function jsonHookHarness({ id, label, dirName, binName, detect, configFile, projectConfigFile, skillsDir, projectSkillsDir, build, trust, extraStatus }) {
   const files = ({ home, root, projectHooks }) => projectHooks
     ? { config: projectConfigFile(root), skills: projectSkillsDir(root) }
     : { config: configFile(home), skills: skillsDir(home) };
 
   return {
     id, label,
-    detect: ({ home, env }) => fs.existsSync(path.join(home, dirName)) || onPath(binName, env),
+    detect: detect || (({ home, env }) => fs.existsSync(path.join(home, dirName)) || onPath(binName, env)),
+    skillsDirs: ({ home, root }) => [skillsDir(home), ...(root ? [projectSkillsDir(root)] : [])],
     install(opts) {
       const changed = [];
       const { config, skills } = files(opts);
@@ -84,13 +85,12 @@ function jsonHookHarness({ id, label, dirName, binName, configFile, projectConfi
       const changed = [];
       for (const projectHooks of [false, true]) {
         if (projectHooks && !opts.root) continue;
-        const { config, skills } = files({ ...opts, projectHooks });
+        const { config } = files({ ...opts, projectHooks });
         const cur = readJson(config);
         if (cur.exists && !cur.error) {
           const next = mergeJsonHooks(cur.data, null);
           if (JSON.stringify(next) !== JSON.stringify(cur.data)) writeJson(config, next, changed);
         }
-        removeSkillCopies(skills, changed);
       }
       return { changed };
     },
@@ -157,6 +157,110 @@ const codex = jsonHookHarness({
   },
 });
 
+// Gemini CLI: same JSON layout, millisecond timeouts, named hooks.
+const gcmd = event => ({ type: 'command', name: `tomnjerry-${event}`, command: hookCommand(event, 'gemini', 'gemini'), timeout: 10000 });
+
+const gemini = jsonHookHarness({
+  id: 'gemini', label: 'Gemini CLI',
+  // ~/.gemini also exists for Antigravity users; require the CLI or its settings.
+  detect: ({ home, env }) => onPath('gemini', env) || fs.existsSync(path.join(home, '.gemini', 'settings.json')),
+  configFile: home => path.join(home, '.gemini', 'settings.json'),
+  projectConfigFile: root => path.join(root, '.gemini', 'settings.json'),
+  skillsDir: home => path.join(home, '.agents', 'skills'),
+  projectSkillsDir: root => path.join(root, '.agents', 'skills'),
+  build: () => ({
+    SessionStart: [{ hooks: [gcmd('sessionStart')] }],
+    BeforeAgent: [{ hooks: [gcmd('prompt')] }],
+    BeforeTool: [{ matcher: 'run_shell_command', hooks: [gcmd('toolBefore')] }],
+    AfterTool: [{ matcher: 'run_shell_command|write_file|replace', hooks: [gcmd('toolAfter')] }],
+    AfterAgent: [{ hooks: [gcmd('stop')] }],
+  }),
+  trust: 'Gemini CLI: project-level hooks must be trusted again whenever they change; accept the prompt on next launch.',
+  extraStatus: ({ home, root }, projectHooks) => {
+    const cfg = readJson(projectHooks ? path.join(root, '.gemini', 'settings.json') : path.join(home, '.gemini', 'settings.json'));
+    const hc = cfg.data && cfg.data.hooksConfig;
+    const warnings = [];
+    if (hc && hc.enabled === false) warnings.push('hooksConfig.enabled is false, so no hooks run');
+    if (hc && Array.isArray(hc.disabled) && hc.disabled.some(n => String(n).startsWith('tomnjerry-'))) warnings.push('some tomnjerry hooks are listed in hooksConfig.disabled');
+    return warnings;
+  },
+});
+
+// ─── Antigravity: named entry in hooks.json ──────────────────────────────────
+
+const AGY_KEY = 'tomnjerry';
+const acmd = event => ({ type: 'command', command: hookCommand(event, 'agy', 'agy'), timeout: 10 });
+
+function agyBuild() {
+  return {
+    PreToolUse: [{ matcher: 'run_command', hooks: [acmd('toolBefore')] }],
+    PostToolUse: [{ matcher: 'run_command|write_to_file|replace_file_content|multi_replace_file_content', hooks: [acmd('toolAfter')] }],
+    // Invocation and Stop handlers sit directly under the event key.
+    PreInvocation: [acmd('prompt')],
+    Stop: [acmd('stop')],
+  };
+}
+
+const agyFile = ({ home, root, projectHooks }) => (projectHooks
+  ? path.join(root, '.agents', 'hooks.json')
+  : path.join(home, '.gemini', 'config', 'hooks.json'));
+
+const agy = {
+  id: 'agy', label: 'Antigravity',
+  detect: ({ home, env }) => onPath('agy', env)
+    || ['antigravity', 'antigravity-cli', 'antigravity-ide'].some(d => fs.existsSync(path.join(home, '.gemini', d))),
+  skillsDirs: ({ home, root }) => [path.join(home, '.agents', 'skills'), ...(root ? [path.join(root, '.agents', 'skills')] : [])],
+  install(opts) {
+    const changed = [];
+    const file = agyFile(opts);
+    const cur = readJson(file);
+    if (cur.error) return { changed, manual: cur.error };
+    writeJson(file, { ...cur.data, [AGY_KEY]: agyBuild() }, changed);
+    installSkillCopies(opts.projectHooks ? path.join(opts.root, '.agents', 'skills') : path.join(opts.home, '.agents', 'skills'), changed);
+    return { changed, notes: ['Antigravity: run /hooks in agy (or check Customizations > Hooks) to confirm the tomnjerry hooks are loaded.'] };
+  },
+  uninstall(opts) {
+    const changed = [];
+    for (const projectHooks of [false, true]) {
+      if (projectHooks && !opts.root) continue;
+      const file = agyFile({ ...opts, projectHooks });
+      const cur = readJson(file);
+      if (cur.exists && !cur.error && cur.data[AGY_KEY]) {
+        const next = { ...cur.data };
+        delete next[AGY_KEY];
+        writeJson(file, next, changed);
+      }
+    }
+    return { changed };
+  },
+  status(opts) {
+    const results = [];
+    for (const projectHooks of [false, true]) {
+      if (projectHooks && !opts.root) continue;
+      const file = agyFile({ ...opts, projectHooks });
+      const cur = readJson(file);
+      if (!cur.exists) continue;
+      if (cur.error) { results.push({ config: file, problems: [cur.error] }); continue; }
+      const entry = cur.data[AGY_KEY];
+      if (!entry) continue;
+      const commands = {};
+      for (const [ev, list] of Object.entries(entry)) {
+        if (!Array.isArray(list)) continue;
+        for (const item of list) {
+          const hooks = item && Array.isArray(item.hooks) ? item.hooks : [item];
+          const h = hooks.find(x => x && isTnjCommand(x.command));
+          if (h && !commands[ev]) commands[ev] = h.command;
+        }
+      }
+      const problems = Object.keys(agyBuild()).filter(ev => !commands[ev]).map(ev => `missing ${ev} hook`);
+      problems.push(...commandProblems(Object.values(commands)));
+      const warnings = entry.enabled === false ? ['the tomnjerry hook entry is disabled ("enabled": false)'] : [];
+      results.push({ config: file, problems, commands, warnings });
+    }
+    return results;
+  },
+};
+
 // ─── Hermes: YAML block in ~/.hermes/config.yaml ─────────────────────────────
 
 const HERMES_BEGIN = '# >>> tomnjerry hooks >>>';
@@ -197,6 +301,7 @@ function stripHermesBlock(text) {
 const hermes = {
   id: 'hermes', label: 'Hermes Agent',
   detect: ({ home, env }) => fs.existsSync(path.join(home, '.hermes')) || onPath('hermes', env),
+  skillsDirs: ({ home }) => [path.join(home, '.hermes', 'skills')],
   configFile: home => path.join(home, '.hermes', 'config.yaml'),
   install({ home }) {
     const changed = [];
@@ -223,7 +328,6 @@ const hermes = {
     const file = this.configFile(home);
     const current = readText(file);
     if (current != null && current.includes(HERMES_BEGIN)) writeWithBackup(file, stripHermesBlock(current), changed);
-    removeSkillCopies(path.join(home, '.hermes', 'skills'), changed);
     return { changed };
   },
   status({ home }) {
@@ -270,6 +374,9 @@ function shimHarness({ id, label, detect, shimFile, projectShimFile, exportLine,
   const fileFor = ({ home, root, projectHooks }) => (projectHooks ? projectShimFile(root) : shimFile(home));
   return {
     id, label, detect,
+    skillsDirs: ({ home, root }) => (skillsDir
+      ? [skillsDir({ home, root, projectHooks: false }), ...(root ? [skillsDir({ home, root, projectHooks: true })] : [])]
+      : []),
     install(opts) {
       const changed = [];
       const target = pathToFileURL(path.join(ADAPTERS_DIR, `${id}.mjs`)).href;
@@ -289,7 +396,6 @@ function shimHarness({ id, label, detect, shimFile, projectShimFile, exportLine,
           changed.push(file);
         }
       }
-      if (skillsDir) removeSkillCopies(skillsDir(opts), changed);
       return { changed };
     },
     status(opts) {
@@ -355,7 +461,7 @@ const pi = shimHarness({
     process.stdout.write(Object.values(event.systemPromptOptions.sections).join('\\n'));`,
 });
 
-const HARNESSES = [claude, codex, hermes, opencode, pi];
+const HARNESSES = [claude, codex, hermes, opencode, pi, gemini, agy];
 
 function byId(id) {
   return HARNESSES.find(h => h.id === id);

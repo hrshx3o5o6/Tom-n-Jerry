@@ -6,7 +6,7 @@ const path = require('path');
 const readline = require('readline');
 const { spawnSync } = require('child_process');
 const { HARNESSES, byId } = require('./harnesses');
-const { scaffoldProject } = require('./scaffold');
+const { scaffoldProject, removeSkillCopies } = require('./scaffold');
 const { binPath } = require('./fsutil');
 const { findRoot } = require('../core/root');
 
@@ -144,6 +144,15 @@ async function remove(argv, { home = os.homedir(), cwd = process.cwd(), log = co
     const { changed } = h.uninstall({ home, root });
     log(`${changed.length ? '✔' : 'ℹ'} ${h.label}: ${changed.length ? 'removed' : 'nothing to remove'}`);
   }
+  // Skill dirs such as ~/.agents/skills are shared: keep any that a harness
+  // still wired to TNJ reads from.
+  const opts = { home, root };
+  const stillUsed = new Set(HARNESSES.filter(h => !ids.includes(h.id) && h.status(opts).length).flatMap(h => h.skillsDirs(opts)));
+  const changed = [];
+  for (const dir of new Set(ids.flatMap(id => byId(id).skillsDirs(opts)))) {
+    if (!stillUsed.has(dir)) removeSkillCopies(dir, changed);
+  }
+  if (changed.length) log(`✔ Removed ${changed.length} tnj-* skill copies`);
   if (flags.purge) {
     const tnj = path.join(root, '.tnj');
     if (fs.existsSync(tnj)) {

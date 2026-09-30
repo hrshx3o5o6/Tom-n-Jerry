@@ -24,6 +24,18 @@ const HARNESSES = {
     // on_session_start is observe-only, so the full summary rides on the first pre_llm_call.
     capabilities: { toolContext: false, sessionStart: false },
   },
+  gemini: {
+    dialect: 'gemini',
+    events: { sessionStart: 'SessionStart', prompt: 'BeforeAgent', toolBefore: 'BeforeTool', toolAfter: 'AfterTool', stop: 'AfterAgent' },
+    // BeforeTool can't add context; AfterTool can append it to the tool result.
+    capabilities: { toolContext: false, deliverAfterTool: true, sessionStart: true },
+  },
+  agy: {
+    dialect: 'agy',
+    // Antigravity has no session-start event and sends no hook_event_name.
+    events: { prompt: 'PreInvocation', toolBefore: 'PreToolUse', toolAfter: 'PostToolUse', stop: 'Stop' },
+    capabilities: { toolContext: false, sessionStart: false },
+  },
 };
 
 function claudeSerialize(decision, event, harness) {
@@ -51,7 +63,27 @@ function claudeSerialize(decision, event, harness) {
   return null;
 }
 
-const SERIALIZERS = { claude: claudeSerialize };
+function geminiSerialize(decision, event, harness) {
+  const native = HARNESSES[harness].events[event];
+  if (decision.block && event === 'toolBefore') return { decision: 'deny', reason: decision.block.reason };
+  // AfterAgent deny: rejects the response and sends `reason` to the agent as a new prompt.
+  if (decision.continue && event === 'stop') return { decision: 'deny', reason: decision.continue.reason };
+  if (decision.context && ['sessionStart', 'prompt', 'toolAfter'].includes(event)) {
+    return { hookSpecificOutput: { hookEventName: native, additionalContext: decision.context } };
+  }
+  return null;
+}
+
+// Antigravity: never emit PreToolUse "allow" — it would auto-approve the tool
+// and bypass the user's permission settings. Silence means default handling.
+function agySerialize(decision, event) {
+  if (decision.block && event === 'toolBefore') return { decision: 'deny', reason: decision.block.reason };
+  if (decision.continue && event === 'stop') return { decision: 'continue', reason: decision.continue.reason };
+  if (decision.context && event === 'prompt') return { injectSteps: [{ ephemeralMessage: decision.context }] };
+  return null;
+}
+
+const SERIALIZERS = { claude: claudeSerialize, gemini: geminiSerialize, agy: agySerialize };
 
 function acceptsEvent(harness, event, native) {
   const h = HARNESSES[harness];

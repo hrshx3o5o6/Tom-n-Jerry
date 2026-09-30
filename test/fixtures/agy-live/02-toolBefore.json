@@ -1,0 +1,17 @@
+{
+  "artifactDirectoryPath": "~/.gemini/antigravity-cli/brain/97fcbe40-de99-4b33-880d-1aec6d1029c7",
+  "conversationId": "97fcbe40-de99-4b33-880d-1aec6d1029c7",
+  "stepIdx": 4,
+  "toolCall": {
+    "args": {
+      "CommandLine": "npm install express-rate-limit --dry-run --offline --no-audit --no-fund",
+      "Cwd": "{{ROOT}}",
+      "WaitMsBeforeAsync": 5000
+    },
+    "name": "run_command"
+  },
+  "transcriptPath": "~/.gemini/antigravity-cli/brain/97fcbe40-de99-4b33-880d-1aec6d1029c7/.system_generated/logs/transcript_full.jsonl",
+  "workspacePaths": [
+    "{{ROOT}}"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "artifactDirectoryPath": "~/.gemini/antigravity-cli/brain/97fcbe40-de99-4b33-880d-1aec6d1029c7",
+  "conversationId": "97fcbe40-de99-4b33-880d-1aec6d1029c7",
+  "initialNumSteps": 6,
+  "invocationNum": 1,
+  "transcriptPath": "~/.gemini/antigravity-cli/brain/97fcbe40-de99-4b33-880d-1aec6d1029c7/.system_generated/logs/transcript_full.jsonl",
+  "workspacePaths": [
+    "{{ROOT}}"
+  ]
+}

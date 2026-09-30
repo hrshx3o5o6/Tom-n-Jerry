@@ -1,0 +1,11 @@
+{
+  "invocationNum": 1,
+  "initialNumSteps": 3,
+  "conversationId": "ec33ebf9-0cba-4100-8142-c61503f6c587",
+  "workspacePaths": [
+    "{{ROOT}}"
+  ],
+  "transcriptPath": "~/.gemini/antigravity-cli/brain/ec33ebf9/.system_generated/logs/transcript.jsonl",
+  "artifactDirectoryPath": "~/.gemini/antigravity-cli/brain/ec33ebf9",
+  "modelName": "gemini-3.6-flash-medium"
+}

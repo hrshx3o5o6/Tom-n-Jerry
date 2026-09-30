@@ -41,8 +41,17 @@ function onSessionStart(ctx) {
   return { context: tom.turnContext(tnjDir, '', { full: true }) };
 }
 
+function deliverPending(tnjDir, sid) {
+  const d = session.derive(session.read(tnjDir, sid));
+  if (!d.undelivered.length) return {};
+  session.append(tnjDir, sid, { e: 'delivered', ids: d.undelivered.map(f => f.id) });
+  return { context: `[Tom n Jerry] Jerry: ${d.undelivered.map(f => f.msg).join(' ')}` };
+}
+
 function onPrompt(ctx) {
   const { input, tnjDir, sid } = ctx;
+  // A model call inside an ongoing turn: only hand over pending findings.
+  if (input.midTurn) return deliverPending(tnjDir, sid);
   session.append(tnjDir, sid, { e: 'prompt' });
   ctx.check();
   const d = session.derive(session.read(tnjDir, sid));
@@ -104,11 +113,7 @@ function onToolAfter(ctx) {
 
   if (input.capabilities && input.capabilities.deliverAfterTool) {
     ctx.check();
-    const d = session.derive(session.read(tnjDir, sid));
-    if (d.undelivered.length) {
-      session.append(tnjDir, sid, { e: 'delivered', ids: d.undelivered.map(f => f.id) });
-      return { context: `[Tom n Jerry] Jerry: ${d.undelivered.map(f => f.msg).join(' ')}` };
-    }
+    return deliverPending(tnjDir, sid);
   }
   return {};
 }
