@@ -1,0 +1,149 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const { setup, remove } = require('../cli/setup');
+const { checkHooks } = require('../cli/doctor');
+const { hookCommand, binPath } = require('../cli/fsutil');
+const { mergeIndex } = require('../cli/scaffold');
+const { tmpdir, write, makeProject } = require('./helpers');
+
+const quiet = () => {};
+const run = (fn, argv, home, cwd) => fn(argv, { home, cwd, env: { PATH: '' }, interactive: false, log: quiet });
+const readJSON = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+const backups = dir => fs.readdirSync(dir).filter(f => f.includes('.tnj-backup-'));
+
+test('setup wires Claude Code, Codex and Hermes and scaffolds the project', async () => {
+  const home = tmpdir();
+  const root = makeProject({ tnj: false });
+  assert.equal(await run(setup, ['--harness', 'claude,codex,hermes'], home, root), 0);
+
+  const claude = readJSON(path.join(home, '.claude', 'settings.json'));
+  assert.deepEqual(Object.keys(claude.hooks).sort(), ['PostToolUse', 'PreToolUse', 'SessionStart', 'Stop', 'UserPromptSubmit']);
+  const pre = claude.hooks.PreToolUse[0];
+  assert.equal(pre.matcher, 'Bash');
+  assert.match(pre.hooks[0].command, /^"[^"]+" "[^"]+tomnjerry\.js" hook toolBefore --dialect claude --harness claude$/);
+
+  const codex = readJSON(path.join(home, '.codex', 'hooks.json'));
+  assert.match(codex.hooks.PostToolUse[0].matcher, /apply_patch/);
+  assert.match(codex.hooks.Stop[0].hooks[0].command, /--harness codex$/);
+
+  const hermes = fs.readFileSync(path.join(home, '.hermes', 'config.yaml'), 'utf8');
+  assert.match(hermes, /pre_llm_call:\n    - command: '.*hook prompt --dialect claude --harness hermes'/);
+  assert.match(hermes, /matcher: 'terminal'/);
+
+  assert.ok(fs.existsSync(path.join(home, '.claude', 'skills', 'tnj-dependency-jerry', 'SKILL.md')));
+  assert.match(fs.readFileSync(path.join(home, '.agents', 'skills', 'tnj-tom-core', 'SKILL.md'), 'utf8'), /^---\nname: tnj-tom-core\n/);
+  assert.ok(fs.existsSync(path.join(home, '.hermes', 'skills', 'tnj-git-jerry', 'SKILL.md')));
+
+  const tnj = path.join(root, '.tnj');
+  assert.ok(fs.existsSync(path.join(tnj, 'skills', 'jerry-core', 'SKILL.md')));
+  assert.match(fs.readFileSync(path.join(tnj, '.gitignore'), 'utf8'), /sessions\/\nreceipts\.jsonl\nerrors\.log\ncurrent-session/);
+  assert.equal(readJSON(path.join(tnj, 'config.json')).mode, 'advise');
+});
+
+test('setup merges into existing configs, is idempotent, and remove restores them', async () => {
+  const home = tmpdir();
+  const root = makeProject({ tnj: false });
+  const original = {
+    theme: 'dark',
+    hooks: {
+      PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: 'my-own-linter' }] }],
+      Notification: [{ hooks: [{ type: 'command', command: 'say done' }] }],
+    },
+  };
+  const settings = write(home, '.claude/settings.json', original);
+  const hermesOriginal = 'model: x\nterminal:\n  backend: local\n';
+  const hermesFile = write(home, '.hermes/config.yaml', hermesOriginal);
+
+  await run(setup, ['--harness', 'claude,hermes', '--no-project'], home, root);
+  const after = readJSON(settings);
+  assert.equal(after.theme, 'dark');
+  assert.equal(after.hooks.PreToolUse.length, 2);
+  assert.equal(after.hooks.PreToolUse[0].hooks[0].command, 'my-own-linter');
+  assert.equal(backups(path.dirname(settings)).length, 1);
+
+  const snapshot = fs.readFileSync(settings, 'utf8');
+  await run(setup, ['--harness', 'claude,hermes', '--no-project'], home, root);
+  assert.equal(fs.readFileSync(settings, 'utf8'), snapshot);
+  assert.equal(backups(path.dirname(settings)).length, 1, 'no backup when nothing changes');
+
+  await run(remove, ['--harness', 'claude,hermes'], home, root);
+  assert.deepEqual(readJSON(settings), original);
+  assert.equal(fs.readFileSync(hermesFile, 'utf8'), hermesOriginal);
+  assert.equal(fs.existsSync(path.join(home, '.claude', 'skills', 'tnj-tom-core')), false);
+});
+
+test('hermes config with its own hooks: key is left untouched', async () => {
+  const home = tmpdir();
+  const text = 'hooks:\n  pre_tool_call:\n    - command: my-guard\n';
+  const file = write(home, '.hermes/config.yaml', text);
+  const logs = [];
+  const code = await setup(['--harness', 'hermes', '--no-project'], { home, cwd: home, env: { PATH: '' }, interactive: false, log: m => logs.push(m) });
+  assert.equal(code, 0);
+  assert.equal(fs.readFileSync(file, 'utf8'), text);
+  assert.match(logs.join('\n'), /already has a top-level "hooks:" key/);
+});
+
+test('--project-hooks writes Claude hooks to settings.local.json in the repo', async () => {
+  const home = tmpdir();
+  const root = makeProject({ tnj: false });
+  await run(setup, ['--harness', 'claude', '--project-hooks'], home, root);
+  assert.ok(fs.existsSync(path.join(root, '.claude', 'settings.local.json')));
+  assert.equal(fs.existsSync(path.join(home, '.claude', 'settings.json')), false);
+  await run(remove, ['--harness', 'claude'], home, root);
+  assert.deepEqual(readJSON(path.join(root, '.claude', 'settings.local.json')), {});
+});
+
+test('invalid JSON config is reported, not overwritten', async () => {
+  const home = tmpdir();
+  const file = write(home, '.claude/settings.json', '{ broken');
+  const logs = [];
+  await setup(['--harness', 'claude', '--no-project'], { home, cwd: home, env: { PATH: '' }, interactive: false, log: m => logs.push(m) });
+  assert.equal(fs.readFileSync(file, 'utf8'), '{ broken');
+  assert.match(logs.join('\n'), /not valid JSON/);
+});
+
+test('unknown harness is rejected', async () => {
+  assert.equal(await run(setup, ['--harness', 'vim'], tmpdir(), tmpdir()), 1);
+});
+
+test('re-scaffolding keeps registered learnings and drops usageCount', () => {
+  const merged = mergeIndex(
+    { skills: [{ id: 'tom-core', path: 'skills/tom-core.md', usageCount: 4 }, { id: 'my-learning', path: 'learnings/x.md' }] },
+    { version: '3', skills: [{ id: 'tom-core', path: 'skills/tom-core/SKILL.md', trigger: 'every-turn' }, { id: 'git-jerry', path: 'skills/git-jerry/SKILL.md' }] },
+  );
+  assert.deepEqual(merged.skills.map(s => s.id), ['tom-core', 'my-learning', 'git-jerry']);
+  assert.equal(merged.skills[0].path, 'skills/tom-core/SKILL.md');
+  assert.equal(merged.skills[0].usageCount, undefined);
+});
+
+test('doctor runs every installed hook for real and catches a broken install', async () => {
+  const home = tmpdir();
+  await run(setup, ['--harness', 'claude,codex,hermes', '--no-project'], home, home);
+  assert.equal(checkHooks({ home, root: home, log: quiet }), true);
+
+  const settings = path.join(home, '.claude', 'settings.json');
+  write(home, '.claude/settings.json', fs.readFileSync(settings, 'utf8').replace(/tomnjerry\.js/g, 'gone.js'));
+  const logs = [];
+  assert.equal(checkHooks({ home, root: home, log: m => logs.push(m) }), false);
+  assert.match(logs.join('\n'), /tomnjerry not found/);
+});
+
+test('generated commands survive paths with spaces', () => {
+  const dir = path.join(tmpdir(), 'dir with spaces');
+  fs.mkdirSync(dir);
+  const link = path.join(dir, 'tomnjerry.js');
+  fs.symlinkSync(binPath(), link);
+  const root = makeProject();
+  const cmd = hookCommand('toolBefore', 'claude', 'claude', { bin: link });
+  const res = spawnSync(cmd, {
+    shell: true, encoding: 'utf8',
+    input: JSON.stringify({ session_id: 's', cwd: root, hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: 'npm i express-rate-limit' } }),
+  });
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /already a dependency/);
+});

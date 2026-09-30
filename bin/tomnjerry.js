@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 
+// Hot path: harnesses spawn this on every hook event. Dispatch before loading
+// anything else so hooks stay fast and can't be broken by CLI-only code.
+if (process.argv[2] === 'hook') {
+  require('../adapters/command').main(process.argv.slice(3));
+  return;
+}
+
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const https = require('https');
 
@@ -15,10 +23,7 @@ const REQUIRED_SKILLS = [
   'git-jerry', 'delete-jerry', 'unix-jerry', 'trap-jerry', 'test-jerry'
 ];
 
-const GLOBAL_AGENTS_PATH = path.join(
-  process.env.HOME || process.env.USERPROFILE,
-  '.config', 'opencode', 'AGENTS.md'
-);
+const GLOBAL_AGENTS_PATH = path.join(os.homedir(), '.config', 'opencode', 'AGENTS.md');
 
 const TNJ_GLOBAL_BLOCK = `
 <!-- tnj-global-begin -->
@@ -131,7 +136,7 @@ Only runs when LOOP-CHECK returned YES (scope expands).
 Read \`.tnj/index.json\` — the FULL catalog including any learnings entries. Match the current task intent + tech stack against ALL entries' trigger + keywords.
 
 For each matching entry:
-- If \`path\` starts with \`skills/\` → read \`.tnj/skills/<skill>.md\`
+- If \`path\` starts with \`skills/\` → read \`.tnj/skills/<skill>/SKILL.md\`
 - If \`path\` starts with \`learnings/\` → read \`.tnj/learnings/<topic>.md\`
 
 Run the checks from the loaded file.
@@ -225,7 +230,7 @@ Jerry reads this first to find relevant skills. Format:
     "id": "descriptive-name",
     "trigger": "when-to-read",
     "keywords": ["intent", "tech", "context"],
-    "path": "skills/name.md",
+    "path": "skills/name/SKILL.md",
     "type": "generic|custom"
   }]
 }
@@ -235,9 +240,8 @@ Jerry reads this first to find relevant skills. Format:
 
 - Save only patterns that apply to 2+ future tasks.
 - Be concise: 5-15 lines. Include trigger condition, checks, example.
-- File name: lowercase-hyphens.md
+- Learning file: .tnj/learnings/lowercase-hyphens.md
 - Append entry to \`.tnj/index.json\` after writing.
-- Skills in \`.tnj/learnings/\` with 2+ successful retrievals → promote to \`.tnj/skills/\` by updating index.json path.
 
 ## Anti-Traps
 
@@ -254,7 +258,18 @@ Jerry reads this first to find relevant skills. Format:
 const command = process.argv[2];
 const flag = process.argv[3];
 
+const exitWith = promise => promise.then(code => { process.exitCode = code; }, err => {
+  console.error(`✖ ${err.message}`);
+  process.exitCode = 1;
+});
+
 switch (command) {
+  case 'setup':
+    exitWith(require('../cli/setup').setup(process.argv.slice(3)));
+    break;
+  case 'remove':
+    exitWith(require('../cli/setup').remove(process.argv.slice(3)));
+    break;
   case 'doctor':
     if (flag === '--loop') {
       runDoctorLoop();
@@ -285,7 +300,7 @@ switch (command) {
     break;
   default:
     console.error(`Unknown command: ${command}`);
-    console.error('Usage: npx @hrshx3o5o6/tomnjerry [init|doctor|check-updates|install-global|remove-global|--help|--version]');
+    console.error('Usage: tomnjerry [setup|remove|doctor|stats|init|check-updates|install-global|remove-global|--help|--version]');
     process.exit(1);
 }
 
@@ -331,9 +346,9 @@ function runDoctor() {
   // Skills check
   console.log(`\nSkills (${REQUIRED_SKILLS.length} required):`);
   REQUIRED_SKILLS.forEach(name => {
-    const filePath = path.join(TNJ_DIR, 'skills', `${name}.md`);
+    const filePath = path.join(TNJ_DIR, 'skills', name, 'SKILL.md');
     if (!fs.existsSync(filePath)) {
-      console.error(`  ✖ Missing: skills/${name}.md`);
+      console.error(`  ✖ Missing: skills/${name}/SKILL.md`);
       allPassed = false;
     } else {
       console.log(`  ✔ ${name}`);
@@ -368,8 +383,11 @@ function runDoctor() {
     const installed = fs.readdirSync(projectTnj).filter(f => f !== '.gitkeep');
     console.log(`\nProject status: ${installed.length} items in .tnj/`);
   } else {
-    console.log(`\nProject status: not initialized (run tnj init in project)`);
+    console.log(`\nProject status: not initialized (run: tomnjerry setup --project)`);
   }
+
+  const { findRoot } = require('../core/root');
+  if (!require('../cli/doctor').checkHooks({ root: findRoot(targetDir, {}) })) allPassed = false;
 
   console.log(allPassed ? '\n✔ All checks passed.' : '\n⚠ Some checks failed.');
   process.exit(allPassed ? 0 : 1);
@@ -454,65 +472,20 @@ function runInit() {
   });
 
   try {
-    // Copy tnj/ directory to project
-    if (fs.existsSync(path.join(TNJ_DIR, 'skills'))) {
-      console.log('-> Creating .tnj/ directory with skills...');
-
-      if (!fs.existsSync(projectTnj)) {
-        fs.mkdirSync(projectTnj, { recursive: true });
-      }
-
-      // Copy index.json
-      const srcIndex = path.join(TNJ_DIR, 'index.json');
-      const destIndex = path.join(projectTnj, 'index.json');
-      if (fs.existsSync(srcIndex)) {
-        fs.copyFileSync(srcIndex, destIndex);
-        console.log('  ✔ Copied index.json');
-      }
-
-      // Copy skills/
-      const srcSkills = path.join(TNJ_DIR, 'skills');
-      const destSkills = path.join(projectTnj, 'skills');
-      if (fs.existsSync(srcSkills)) {
-        copyDirRecursive(srcSkills, destSkills);
-        const skillFiles = fs.readdirSync(destSkills).length;
-        console.log(`  ✔ Copied ${skillFiles} skill files`);
-      }
-
-      // Create learnings/
-      const destLearnings = path.join(projectTnj, 'learnings');
-      if (!fs.existsSync(destLearnings)) {
-        fs.mkdirSync(destLearnings, { recursive: true });
-        fs.writeFileSync(path.join(destLearnings, '.gitkeep'), '');
-      }
-      console.log('  ✔ Created learnings/ directory');
-    }
+    const { scaffoldProject, packageSkillIds } = require('../cli/scaffold');
+    const changed = scaffoldProject(targetDir);
+    console.log(`  ✔ ${projectTnj} (${changed.length} files updated, existing learnings kept)`);
 
     console.log('\n🐱 Tom n Jerry initialization complete!');
-    console.log('   Project .tnj/ created with 13 skill files and index.');
-    console.log('   Restart opencode to pick up the new AGENTS.md loop protocol.');
-    console.log('   Verify: npx @hrshx3o5o6/tomnjerry doctor');
+    console.log(`   Project .tnj/ has ${packageSkillIds().length} skills and the index.`);
+    console.log('   Hooks (Claude Code, Codex, Hermes): tomnjerry setup');
+    console.log('   opencode (AGENTS.md protocol): tomnjerry install-global, then restart opencode.');
+    console.log('   Verify: tomnjerry doctor');
 
   } catch (error) {
     console.error('✖ Initialization failed:', error.message);
     process.exit(1);
   }
-}
-
-function copyDirRecursive(src, dest) {
-  if (!fs.existsSync(dest)) {
-    fs.mkdirSync(dest, { recursive: true });
-  }
-  fs.readdirSync(src).forEach(item => {
-    const srcPath = path.join(src, item);
-    const destPath = path.join(dest, item);
-    const stat = fs.lstatSync(srcPath);
-    if (stat.isDirectory()) {
-      copyDirRecursive(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
-    }
-  });
 }
 
 // ─── Global AGENTS.md ──────────────────────────────────────────────────────────
@@ -600,20 +573,25 @@ function printHelp() {
   console.log(`
 Tom n Jerry — Self-improving loop engine for AI coding agents.
 
-Usage:
-  npx @hrshx3o5o6/tomnjerry init              Initialize .tnj/ in project (skills + index)
-  npx @hrshx3o5o6/tomnjerry doctor             Run diagnostic checks
-  npx @hrshx3o5o6/tomnjerry doctor --loop      Show current loop state
-  npx @hrshx3o5o6/tomnjerry check-updates      Check npm for newer version
-  npx @hrshx3o5o6/tomnjerry install-global     Install loop protocol to ~/.config/opencode/AGENTS.md
-  npx @hrshx3o5o6/tomnjerry remove-global      Remove loop protocol from AGENTS.md
-  npx @hrshx3o5o6/tomnjerry --help             Show this message
-  npx @hrshx3o5o6/tomnjerry --version         Show version
+Install:
+  npm i -g @hrshx3o5o6/tomnjerry && tomnjerry setup
 
-Setup:
-  1. install-global  — makes TNJ fire in every opencode session
-  2. init            — creates .tnj/ in your project (skills + learnings)
-  3. restart opencode — pick up the loop protocol
+Usage:
+  tomnjerry setup [options]    Wire hooks into your agent harnesses and enable this project
+      --harness a,b              Pick harnesses (claude, codex, hermes); default: detected
+      --all                      All supported harnesses
+      --project / --no-project   Scaffold .tnj/ here (default: yes inside a repo)
+      --project-hooks            Hooks for this project only (default: all projects)
+      --mode advise|enforce|off  Jerry mode for this project (default: advise)
+      --yes                      No prompts
+  tomnjerry remove [--harness a,b] [--purge]   Remove TNJ hooks and skill copies (--purge deletes .tnj/)
+  tomnjerry doctor             Diagnostics, including a live run of every installed hook
+  tomnjerry doctor --loop      Show current loop state
+  tomnjerry init               Scaffold .tnj/ only (opencode AGENTS.md users)
+  tomnjerry install-global     Legacy: loop protocol in ~/.config/opencode/AGENTS.md
+  tomnjerry remove-global      Legacy: remove it
+  tomnjerry check-updates      Check npm for a newer version
+  tomnjerry --help | --version
 
 The Loop:
   Tom (momentum) → Jerry (scan for shortcuts) → receipt (prove it) → Teacher (learn) → loop
