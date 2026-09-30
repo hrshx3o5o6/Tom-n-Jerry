@@ -14,9 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm doctor
+      # Zero runtime dependencies: the test suite needs no install.
+      - run: npm test
+      - run: npm run doctor
 
   agentic-bench:
     runs-on: ubuntu-latest
