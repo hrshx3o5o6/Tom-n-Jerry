@@ -56,8 +56,8 @@ function checkHooks({ home = os.homedir(), root, log = console.log } = {}) {
     for (const r of results) {
       any = true;
       const problems = [...r.problems];
-      if (!problems.length && r.commands) {
-        const err = smoke(r.commands);
+      if (!problems.length) {
+        const err = r.smoke ? r.smoke() : r.commands ? smoke(r.commands) : '';
         if (err) problems.push(err);
       }
       if (problems.length) {

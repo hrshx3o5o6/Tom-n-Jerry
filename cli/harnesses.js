@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL, fileURLToPath } = require('url');
 const {
   readJson, readText, writeJson, writeWithBackup, hookCommand, isTnjCommand, commandPaths, onPath,
 } = require('./fsutil');
@@ -239,7 +240,122 @@ const hermes = {
   },
 };
 
-const HARNESSES = [claude, codex, hermes];
+// ─── In-process plugins: a managed shim file that re-exports our adapter ────
+
+const SHIM_MARKER = '// Managed by `tomnjerry setup`. Remove with: tomnjerry remove';
+const ADAPTERS_DIR = path.join(__dirname, '..', 'adapters');
+
+function shimTarget(text) {
+  const m = /from "(file:[^"]+)"/.exec(text || '');
+  return m ? m[1] : null;
+}
+
+// Imports the real adapter in a child process and drives one fake turn.
+function smokeModule(script) {
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'tnj-doctor-')));
+  try {
+    fs.mkdirSync(path.join(root, '.git'));
+    fs.cpSync(path.join(__dirname, '..', 'tnj'), path.join(root, '.tnj'), { recursive: true });
+    const res = spawnSync(process.execPath, ['--input-type=module', '-e', script(root)], { encoding: 'utf8', timeout: 10000 });
+    if (res.status !== 0) return `adapter failed to load: ${(res.stderr || '').trim().split('\n')[0]}`;
+    return /Tom n Jerry/.test(res.stdout) ? '' : 'adapter loaded but produced no Tom n Jerry context';
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+function shimHarness({ id, label, detect, shimFile, projectShimFile, exportLine, skillsDir, notes, projectNotes, cleanup, smokeScript }) {
+  const fileFor = ({ home, root, projectHooks }) => (projectHooks ? projectShimFile(root) : shimFile(home));
+  return {
+    id, label, detect,
+    install(opts) {
+      const changed = [];
+      const target = pathToFileURL(path.join(ADAPTERS_DIR, `${id}.mjs`)).href;
+      writeWithBackup(fileFor(opts), `${SHIM_MARKER} --harness ${id}\n${exportLine(target)}\n`, changed);
+      if (skillsDir) installSkillCopies(skillsDir(opts), changed);
+      const out = [...(notes || []), ...(opts.projectHooks && projectNotes ? projectNotes : [])];
+      if (cleanup) out.push(...cleanup(opts, changed));
+      return { changed, notes: out };
+    },
+    uninstall(opts) {
+      const changed = [];
+      for (const projectHooks of [false, true]) {
+        if (projectHooks && !opts.root) continue;
+        const file = fileFor({ ...opts, projectHooks });
+        if ((readText(file) || '').startsWith(SHIM_MARKER)) {
+          fs.unlinkSync(file);
+          changed.push(file);
+        }
+      }
+      if (skillsDir) removeSkillCopies(skillsDir(opts), changed);
+      return { changed };
+    },
+    status(opts) {
+      const results = [];
+      for (const projectHooks of [false, true]) {
+        if (projectHooks && !opts.root) continue;
+        const file = fileFor({ ...opts, projectHooks });
+        const text = readText(file);
+        if (!text || !text.startsWith(SHIM_MARKER)) continue;
+        const target = shimTarget(text);
+        const problems = [];
+        if (!target || !fs.existsSync(fileURLToPath(target))) problems.push(`adapter not found at ${target} (re-run tomnjerry setup)`);
+        results.push({ config: file, problems, warnings: [], smoke: () => smokeModule(root => smokeScript(target, root)) });
+      }
+      return results;
+    },
+  };
+}
+
+const opencode = shimHarness({
+  id: 'opencode', label: 'opencode',
+  detect: ({ home, env }) => fs.existsSync(path.join(home, '.config', 'opencode')) || onPath('opencode', env),
+  shimFile: home => path.join(home, '.config', 'opencode', 'plugins', 'tomnjerry.js'),
+  projectShimFile: root => path.join(root, '.opencode', 'plugins', 'tomnjerry.js'),
+  exportLine: target => `export { TomNJerry } from ${JSON.stringify(target)};`,
+  notes: ['opencode: restart opencode to load the Tom n Jerry plugin.'],
+  // The plugin supersedes the legacy AGENTS.md protocol block; running both
+  // would inject the loop twice.
+  cleanup: ({ home }, changed) => {
+    const file = path.join(home, '.config', 'opencode', 'AGENTS.md');
+    const text = readText(file);
+    const start = text ? text.indexOf('<!-- tnj-global-begin -->') : -1;
+    const endTag = '<!-- tnj-global-end -->';
+    if (start < 0 || text.indexOf(endTag) < 0) return [];
+    const next = (text.slice(0, start) + text.slice(text.indexOf(endTag) + endTag.length)).replace(/\n{3,}/g, '\n\n');
+    writeWithBackup(file, next, changed);
+    return ['opencode: removed the legacy TNJ block from ~/.config/opencode/AGENTS.md (the plugin replaces it; a backup was kept).'];
+  },
+  smokeScript: (target, root) => `
+    const { TomNJerry } = await import(${JSON.stringify(target)});
+    const h = await TomNJerry({ client: {}, directory: ${JSON.stringify(root)} });
+    await h['chat.message']({ sessionID: 'doctor' }, { parts: [{ type: 'text', text: 'add a dependency' }] });
+    const out = { system: [] };
+    await h['experimental.chat.system.transform']({ sessionID: 'doctor' }, out);
+    process.stdout.write(out.system.join('\\n'));`,
+});
+
+const pi = shimHarness({
+  id: 'pi', label: 'Pi',
+  detect: ({ home, env }) => fs.existsSync(path.join(home, '.pi')) || onPath('pi', env),
+  shimFile: home => path.join(home, '.pi', 'agent', 'extensions', 'tomnjerry.js'),
+  projectShimFile: root => path.join(root, '.pi', 'extensions', 'tomnjerry.js'),
+  exportLine: target => `export { default } from ${JSON.stringify(target)};`,
+  skillsDir: ({ home, root, projectHooks }) => (projectHooks ? path.join(root, '.agents', 'skills') : path.join(home, '.agents', 'skills')),
+  notes: ['Pi: restart pi (or /reload) to load the Tom n Jerry extension.'],
+  projectNotes: ['Pi: project extensions load only after you trust the project in pi.'],
+  smokeScript: (target, root) => `
+    const { default: ext } = await import(${JSON.stringify(target)});
+    const handlers = {};
+    ext({ on: (name, fn) => { handlers[name] = fn; } });
+    const event = { prompt: 'add a dependency', systemPrompt: '', systemPromptOptions: { sections: {} } };
+    await handlers.before_agent_start(event, { cwd: ${JSON.stringify(root)}, sessionManager: { getSessionId: () => 'doctor' } });
+    process.stdout.write(Object.values(event.systemPromptOptions.sections).join('\\n'));`,
+});
+
+const HARNESSES = [claude, codex, hermes, opencode, pi];
 
 function byId(id) {
   return HARNESSES.find(h => h.id === id);

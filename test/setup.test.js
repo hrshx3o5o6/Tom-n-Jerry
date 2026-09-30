@@ -133,6 +133,35 @@ test('doctor runs every installed hook for real and catches a broken install', a
   assert.match(logs.join('\n'), /tomnjerry not found/);
 });
 
+test('opencode + Pi: shims installed, legacy AGENTS.md block removed, doctor smoke passes, remove cleans up', async () => {
+  const home = tmpdir();
+  const agents = write(home, '.config/opencode/AGENTS.md', '# Mine\n\n<!-- tnj-global-begin -->\nold protocol\n<!-- tnj-global-end -->\n\n# Also mine\n');
+  await run(setup, ['--harness', 'opencode,pi', '--no-project'], home, home);
+
+  const ocShim = path.join(home, '.config', 'opencode', 'plugins', 'tomnjerry.js');
+  const piShim = path.join(home, '.pi', 'agent', 'extensions', 'tomnjerry.js');
+  assert.match(fs.readFileSync(ocShim, 'utf8'), /export \{ TomNJerry \} from "file:.*adapters\/opencode\.mjs"/);
+  assert.match(fs.readFileSync(piShim, 'utf8'), /export \{ default \} from "file:.*adapters\/pi\.mjs"/);
+  assert.equal(fs.readFileSync(agents, 'utf8'), '# Mine\n\n# Also mine\n');
+  assert.ok(fs.existsSync(path.join(home, '.agents', 'skills', 'tnj-tom-core', 'SKILL.md')));
+
+  const logs = [];
+  assert.equal(checkHooks({ home, root: home, log: m => logs.push(m) }), true, logs.join('\n'));
+  assert.match(logs.join('\n'), /✔ opencode/);
+  assert.match(logs.join('\n'), /✔ Pi/);
+
+  await run(remove, ['--harness', 'opencode,pi'], home, home);
+  assert.equal(fs.existsSync(ocShim), false);
+  assert.equal(fs.existsSync(piShim), false);
+});
+
+test('remove never deletes a user file that happens to share the shim name', async () => {
+  const home = tmpdir();
+  const mine = write(home, '.config/opencode/plugins/tomnjerry.js', 'export const Mine = async () => ({});\n');
+  await run(remove, ['--harness', 'opencode'], home, home);
+  assert.ok(fs.existsSync(mine));
+});
+
 test('generated commands survive paths with spaces', () => {
   const dir = path.join(tmpdir(), 'dir with spaces');
   fs.mkdirSync(dir);
