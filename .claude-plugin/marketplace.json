@@ -1,0 +1,16 @@
+{
+  "name": "tomnjerry",
+  "owner": {
+    "name": "hrshx3o5o6"
+  },
+  "plugins": [
+    {
+      "name": "tomnjerry",
+      "source": "./",
+      "description": "Stops your AI coding agent from overbuilding: checks installs against your lockfile, proves changes with real receipts, and learns your codebase."
+    }
+  ],
+  "metadata": {
+    "description": "Tom n Jerry: lifecycle hooks that stop AI coding agents from overbuilding."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "tomnjerry",
+  "version": "3.0.0",
+  "description": "Stops your AI coding agent from overbuilding: checks installs against your lockfile, proves changes with real receipts, and learns your codebase.",
+  "keywords": [
+    "overbuilding",
+    "yagni",
+    "hooks",
+    "dependencies",
+    "receipts"
+  ],
+  "author": {
+    "name": "hrshx3o5o6"
+  },
+  "homepage": "https://github.com/hrshx3o5o6/Tom-n-Jerry",
+  "repository": "https://github.com/hrshx3o5o6/Tom-n-Jerry",
+  "license": "MIT",
+  "skills": "./tnj/skills",
+  "hooks": "./integrations/claude/hooks.json"
+}

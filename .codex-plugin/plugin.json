@@ -1,0 +1,14 @@
+{
+  "name": "tomnjerry",
+  "version": "3.0.0",
+  "description": "Stops your AI coding agent from overbuilding: checks installs against your lockfile, proves changes with real receipts, and learns your codebase.",
+  "keywords": [
+    "overbuilding",
+    "yagni",
+    "hooks",
+    "dependencies",
+    "receipts"
+  ],
+  "skills": "./tnj/skills",
+  "hooks": "./integrations/codex/hooks.json"
+}

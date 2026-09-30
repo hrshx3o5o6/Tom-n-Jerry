@@ -270,6 +270,9 @@ switch (command) {
   case 'remove':
     exitWith(require('../cli/setup').remove(process.argv.slice(3)));
     break;
+  case 'stats':
+    process.exitCode = require('../cli/stats').stats(process.argv.slice(3));
+    break;
   case 'doctor':
     if (flag === '--loop') {
       runDoctorLoop();
@@ -586,6 +589,7 @@ Usage:
       --yes                      No prompts
   tomnjerry remove [--harness a,b] [--purge]   Remove TNJ hooks and skill copies (--purge deletes .tnj/)
   tomnjerry doctor             Diagnostics, including a live run of every installed hook
+  tomnjerry stats [--json]     What Jerry, Receipt and Teacher did in this project
   tomnjerry doctor --loop      Show current loop state
   tomnjerry init               Scaffold .tnj/ only (opencode AGENTS.md users)
   tomnjerry install-global     Legacy: loop protocol in ~/.config/opencode/AGENTS.md

@@ -1,9 +1,9 @@
 {
   "name": "@hrshx3o5o6/tomnjerry",
-  "version": "2.2.3",
+  "version": "3.0.0",
   "description": "Stops your AI coding agent from overbuilding. Lifecycle hooks for Claude Code, Codex, Hermes, opencode, Pi, Gemini CLI and Antigravity that find existing code, skip unnecessary packages, prove changes work, and learn your codebase.",
   "type": "commonjs",
-  "main": "bin/tomnjerry.js",
+  "main": "adapters/opencode.mjs",
   "bin": {
     "tomnjerry": "bin/tomnjerry.js"
   },
@@ -19,7 +19,10 @@
     "CONTRIBUTING.md",
     "LICENSE",
     "CHANGELOG.md",
-    "SECURITY.md"
+    "SECURITY.md",
+    ".claude-plugin",
+    ".codex-plugin",
+    "integrations"
   ],
   "engines": {
     "node": ">=18"
@@ -55,7 +58,10 @@
     "hermes",
     "hooks",
     "gemini-cli",
-    "antigravity"
+    "antigravity",
+    "pi-package",
+    "opencode-plugin",
+    "claude-code-plugin"
   ],
   "author": "harsha <hrshx3o5o6@users.noreply.github.com>",
   "license": "MIT",
@@ -65,5 +71,13 @@
   "homepage": "https://github.com/hrshx3o5o6/Tom-n-Jerry#readme",
   "devDependencies": {
     "promptfoo": "^0.121.19"
+  },
+  "pi": {
+    "extensions": [
+      "./adapters/pi.mjs"
+    ],
+    "skills": [
+      "./tnj/skills"
+    ]
   }
 }
