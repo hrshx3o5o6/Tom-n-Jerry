@@ -1,3 +1,8 @@
+---
+name: tom-core
+description: "Tom is momentum. Propose the next concrete action and keep the work moving. Use: Every turn, or when stuck, or after receipt verification."
+---
+
 # tom-core
 
 Tom is momentum. Propose the next concrete action and keep the work moving.

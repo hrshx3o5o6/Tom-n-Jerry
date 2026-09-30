@@ -1,3 +1,8 @@
+---
+name: api-jerry
+description: "Check existing endpoints before creating new routes. Use: Before exposing new REST, GraphQL, or gRPC endpoints. Before creating API controllers, router files, or handlers."
+---
+
 # api-jerry
 
 Check existing endpoints before creating new routes.

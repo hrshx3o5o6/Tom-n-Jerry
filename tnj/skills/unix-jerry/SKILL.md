@@ -1,3 +1,8 @@
+---
+name: unix-jerry
+description: "Use shell tools before writing custom scripts. Use: Before writing scripts for: file search, text processing, counting, filtering, transformation, inspection, batch processing."
+---
+
 # unix-jerry
 
 Use shell tools before writing custom scripts.

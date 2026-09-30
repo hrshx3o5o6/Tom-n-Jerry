@@ -1,3 +1,8 @@
+---
+name: receipt-jerry
+description: "Receipt proves the move worked. Never accept \"it built\" as proof. Use: After a code edit is saved, a command runs, or before claiming \"done\"."
+---
+
 # receipt-jerry
 
 Receipt proves the move worked. Never accept "it built" as proof.

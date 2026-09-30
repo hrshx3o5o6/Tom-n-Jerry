@@ -1,3 +1,8 @@
+---
+name: db-jerry
+description: "Check existing schemas before creating tables or modifying columns. Use: Before modifying SQL, Prisma, Mongoose schemas. Before adding columns, tables, or indexes."
+---
+
 # db-jerry
 
 Check existing schemas before creating tables or modifying columns.

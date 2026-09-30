@@ -1,3 +1,8 @@
+---
+name: framework-jerry
+description: "Use framework-blessed patterns before building custom wrappers. Use: Before creating custom: caching layers, routers, authentication handlers, request validators, hooks, context providers, or application-wide helpers."
+---
+
 # framework-jerry
 
 Use framework-blessed patterns before building custom wrappers.

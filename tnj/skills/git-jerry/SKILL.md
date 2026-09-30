@@ -1,3 +1,8 @@
+---
+name: git-jerry
+description: "Search git history before rebuilding deleted features. Use: Before recreating a deleted file or feature. Before restoring reverted code. When diagnosing when a bug was introduced."
+---
+
 # git-jerry
 
 Search git history before rebuilding deleted features.

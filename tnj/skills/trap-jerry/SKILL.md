@@ -1,3 +1,8 @@
+---
+name: trap-jerry
+description: "Avoid high-risk custom infrastructure: auth, crypto, caching, queues. Use: Before writing: password hashing, JWT parsing, session management, custom caching, home-rolled queues, background polling loops, custom state machines, file-based sync, custom encryption."
+---
+
 # trap-jerry
 
 Avoid high-risk custom infrastructure: auth, crypto, caching, queues.

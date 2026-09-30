@@ -111,7 +111,7 @@ Only runs when LOOP-CHECK returned YES (scope expands).
 Read `.tnj/index.json` — the FULL catalog including any learnings entries. Match the current task intent + tech stack against ALL entries' trigger + keywords.
 
 For each matching entry:
-- If `path` starts with `skills/` → read `.tnj/skills/<skill>.md`
+- If `path` starts with `skills/` → read `.tnj/skills/<skill>/SKILL.md`
 - If `path` starts with `learnings/` → read `.tnj/learnings/<topic>.md`
 
 Run the checks from the loaded file.
@@ -205,7 +205,7 @@ Jerry reads this first to find relevant skills. Format:
     "id": "descriptive-name",
     "trigger": "when-to-read",
     "keywords": ["intent", "tech", "context"],
-    "path": "skills/name.md",
+    "path": "skills/name/SKILL.md",
     "type": "generic|custom"
   }]
 }
@@ -215,9 +215,8 @@ Jerry reads this first to find relevant skills. Format:
 
 - Save only patterns that apply to 2+ future tasks.
 - Be concise: 5-15 lines. Include trigger condition, checks, example.
-- File name: lowercase-hyphens.md
+- Learning file: .tnj/learnings/lowercase-hyphens.md
 - Append entry to `.tnj/index.json` after writing.
-- Skills in `.tnj/learnings/` with 2+ successful retrievals → promote to `.tnj/skills/` by updating index.json path.
 
 ## Anti-Traps
 

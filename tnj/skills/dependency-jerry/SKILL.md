@@ -1,3 +1,8 @@
+---
+name: dependency-jerry
+description: "Before installing any package, check what's already installed. Use: Before running npm install, pip install, cargo add, gem install. Before building utility helpers (date formatting, deep copy, HTTP wrappers)."
+---
+
 # dependency-jerry
 
 Before installing any package, check what's already installed.

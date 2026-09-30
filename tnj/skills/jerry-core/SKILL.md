@@ -1,3 +1,8 @@
+---
+name: jerry-core
+description: "Jerry is street smart. Before implementing, scan for cheaper existing paths. Use: Only when LOOP-CHECK returns YES (scope expands). If LOOP-CHECK returned NO, skip this skill entirely."
+---
+
 # jerry-core
 
 Jerry is street smart. Before implementing, scan for cheaper existing paths.

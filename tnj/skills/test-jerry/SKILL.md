@@ -1,3 +1,8 @@
+---
+name: test-jerry
+description: "Use existing test infrastructure before writing new mocks or boilerplate. Use: Before writing unit, integration, or E2E tests. Before creating mock configurations. Before setting up test suites."
+---
+
 # test-jerry
 
 Use existing test infrastructure before writing new mocks or boilerplate.

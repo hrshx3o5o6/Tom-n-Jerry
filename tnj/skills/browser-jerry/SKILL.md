@@ -1,3 +1,8 @@
+---
+name: browser-jerry
+description: "Use native browser APIs before pulling npm libraries. Use: Before adding libraries for: modals, dialogs, dropdowns, tooltips, popovers, form validation, animations, intersection tracking, lazy loading, client-side storage."
+---
+
 # browser-jerry
 
 Use native browser APIs before pulling npm libraries.

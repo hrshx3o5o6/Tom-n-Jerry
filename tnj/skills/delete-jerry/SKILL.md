@@ -1,3 +1,8 @@
+---
+name: delete-jerry
+description: "The best code is no code. Solve problems by subtracting. Use: Before editing existing code. When cleaning up tech debt. When fixing bugs in legacy abstractions. When asked to migrate, cleanup, refactor, or simplify."
+---
+
 # delete-jerry
 
 The best code is no code. Solve problems by subtracting.
