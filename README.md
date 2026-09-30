@@ -15,7 +15,7 @@
   <a href="https://github.com/hrshx3o5o6/Tom-n-Jerry/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@hrshx3o5o6/tomnjerry.svg?style=flat-square&color=black" alt="MIT" /></a>
 </p>
 
-**Tom n Jerry** stops your AI coding agent from overbuilding. It runs on every turn — intercepting unnecessary packages, finding existing code, and learning your codebase's patterns over time.
+**Tom n Jerry** stops your AI coding agent from overbuilding. It hooks into Claude Code, Codex, Hermes, opencode, Pi, Gemini CLI and Antigravity, and runs on every turn — intercepting unnecessary packages, finding existing code, and learning your codebase's patterns over time.
 
 Unlike a static ruleset, it gets smarter. After three sessions of "add rate limiting to auth routes," Jerry knows your Express setup and skips the research entirely.
 
@@ -158,45 +158,66 @@ Next session: Jerry reads the skill in 2 seconds, Tom implements in minutes, not
 ## Quick Start
 
 ```bash
-# 1. Install globally (one time)
-npm install -g @hrshx3o5o6/tomnjerry
-
-# 2. Install the loop protocol into opencode (one time per machine)
-tomnjerry install-global
-
-# 3. Initialize in your project (one time per project)
+npm i -g @hrshx3o5o6/tomnjerry
 cd /path/to/your/project
-tomnjerry init
-
-# 4. Restart opencode — the loop fires every turn
-opencode
+tomnjerry setup
 ```
 
-That's it. No config files. No package.json changes.
+`setup` finds the agent harnesses you have installed, wires Tom n Jerry into their lifecycle hooks, and enables the current project. Restart your agent and the loop runs on every turn. Check it with `tomnjerry doctor`, which actually runs each installed hook against a scratch project.
+
+Hooks are installed for all projects, but they do nothing in a repo until it has a `.tnj/` folder. Run `tomnjerry setup --project` in each repo where you want the loop.
+
+### Supported harnesses
+
+| Harness | How TNJ hooks in | Install without `setup` |
+|---|---|---|
+| **Claude Code** | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse(Failure)`, `Stop` | `/plugin marketplace add hrshx3o5o6/Tom-n-Jerry` then `/plugin install tomnjerry@tomnjerry` |
+| **Codex CLI** | Same hook contract as Claude Code (`hooks.json`) | Plugin via `.codex-plugin`. New hooks stay off until you trust them with `/hooks`. |
+| **Hermes Agent** | Shell hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `pre_verify` | — |
+| **opencode** | In-process plugin: system prompt transform, `tool.execute.*`, `session.idle` | `"plugin": ["@hrshx3o5o6/tomnjerry"]` in `opencode.json` |
+| **Pi** | In-process extension: `before_agent_start`, `tool_call`, `tool_result`, `agent_before_settle` | `pi install npm:@hrshx3o5o6/tomnjerry` |
+| **Gemini CLI** | `BeforeAgent`, `BeforeTool`, `AfterTool`, `AfterAgent` | — |
+| **Antigravity** | `PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop` | — |
+
+Choose a harness explicitly with `tomnjerry setup --harness claude,codex`. To scope hooks to one repo, add `--project-hooks`.
+
+### How the hooks work
+
+Earlier versions put the protocol in `AGENTS.md` and hoped the model would follow it. Hooks run inside the harness itself, before and after the model acts, so the model can't skip them:
+
+- **Tom:** the loop summary and your current `.tnj/loop-state.json` are added to the context every turn, along with the skills that match the request.
+- **Jerry:** before a shell command runs, TNJ checks every `npm/pnpm/yarn/bun/pip/uv/poetry/cargo/go/gem` install against your manifests and lockfiles itself. In `advise` mode (the default) it tells the agent the package is already there. In `enforce` mode it blocks the install. It also suggests native alternatives, such as `uuid` → `crypto.randomUUID()`.
+- **Receipt:** it logs every command and its real exit code to `.tnj/receipts.jsonl`. If the agent edits code and tries to finish without running anything that verifies it, TNJ sends it back once to prove the change works.
+- **Teacher:** if Jerry found shortcuts during a session, TNJ asks once whether any is worth saving to `.tnj/learnings/`.
+
+TNJ fails open: any error in TNJ yields an empty decision, so it can never block or break your agent. A hook takes about 40 ms.
+
+```bash
+tomnjerry stats          # what the loop did in this project
+```
+
+Configure it per project in `.tnj/config.json`:
+
+```json
+{ "mode": "advise", "receipts": { "gate": true }, "teacher": { "nudge": true } }
+```
+
+`mode` is `advise`, `enforce`, or `off`.
 
 ---
 
 ## What Gets Installed
 
 ```
-.tnj/                # In your project
-├── index.json         # Skill catalog (Jerry reads this first)
-├── skills/           # 13 pre-built skill files
-│   ├── dependency-jerry.md
-│   ├── browser-jerry.md
-│   ├── framework-jerry.md
-│   ├── git-jerry.md
-│   ├── delete-jerry.md
-│   ├── trap-jerry.md
-│   ├── api-jerry.md
-│   ├── db-jerry.md
-│   ├── unix-jerry.md
-│   ├── test-jerry.md
-│   ├── jerry-core.md
-│   ├── tom-core.md
-│   └── receipt-jerry.md
-└── learnings/        # Your custom skills accumulate here
+.tnj/                       # In your project
+├── config.json             # mode: advise | enforce | off
+├── index.json              # Skill catalog (Jerry matches requests against it)
+├── skills/<id>/SKILL.md    # 13 skills in the agentskills.io format
+├── learnings/              # Patterns Teacher records for next time
+└── sessions/, receipts.jsonl   # Per-machine logs (gitignored)
 ```
+
+Each harness also gets `tnj-*` copies of the skills in its native skills folder (`~/.claude/skills`, `~/.agents/skills`, `~/.hermes/skills`), so it can load them on demand.
 
 ---
 
@@ -239,15 +260,12 @@ Ponytail stops overbuilding in the moment. Tom n Jerry also remembers what it fo
 ## Uninstall
 
 ```bash
-# Remove from a project
-rm -rf .tnj/
-
-# Remove globally from opencode
-tomnjerry remove-global
-
-# Uninstall the npm package
+tomnjerry remove            # remove TNJ hooks and skill copies from every harness
+tomnjerry remove --purge    # also delete this project's .tnj/
 npm uninstall -g @hrshx3o5o6/tomnjerry
 ```
+
+`remove` puts your configs back the way they were. Your own hooks are never touched, and a backup is kept whenever a file changes.
 
 ---
 

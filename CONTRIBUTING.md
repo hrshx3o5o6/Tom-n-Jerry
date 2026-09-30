@@ -6,9 +6,9 @@ Each new skill should make agents notice a specific class of opportunity before 
 
 ## Skill Format
 
-Skills live in `tnj/skills/` (published to npm) and `.tnj/skills/` (project copy).
+Skills live in `tnj/skills/<id>/SKILL.md` (published to npm) and are copied into each project's `.tnj/skills/`. They follow the [agentskills.io](https://agentskills.io) format: `name` and `description` frontmatter, then the body. Register each one in `tnj/index.json` with a `trigger` and `keywords`, which the hooks use to point the agent at relevant skills.
 
-Each skill is a Markdown file with:
+Each skill body has:
 
 - **Trigger**: When does this skill fire?
 - **Checks**: Concrete steps Jerry runs
@@ -27,6 +27,11 @@ Each skill is a Markdown file with:
 ## Skill Template
 
 ```markdown
+---
+name: <skill-name>
+description: "One line: what it checks. Use: before <action>."
+---
+
 # <skill-name>
 
 ## Trigger
@@ -63,9 +68,11 @@ That's too broad to be useful.
 ## Running Tests
 
 ```bash
-npm test          # Run doctor + version check
-npm run doctor    # Just the doctor checks
+npm test          # node:test suite: engine, adapters, setup, golden harness payloads
+npm run doctor    # diagnostics, including a live run of installed hooks
 ```
+
+The harness contracts are pinned by `test/fixtures/<harness>/`: payloads captured from live sessions or taken field-for-field from each harness's source. If a harness changes its hook format, add a fixture that reproduces it before changing an adapter.
 
 ## Submitting Changes
 
@@ -80,5 +87,5 @@ Open an issue at https://github.com/hrshx3o5o6/Tom-n-Jerry/issues
 
 Include:
 - What you expected vs what happened
-- opencode version and TNJ version (`tomnjerry doctor`)
+- Your harness and its version, plus TNJ version (`tomnjerry doctor`)
 - Steps to reproduce
