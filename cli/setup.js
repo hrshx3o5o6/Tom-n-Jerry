@@ -112,8 +112,12 @@ async function setup(argv, {
   log(`\nWiring hooks for ${scope}:`);
   for (const id of selected) {
     const h = byId(id);
+    if (flags.projectHooks && h.supportsProjectHooks === false) {
+      log(`  - ${h.label}: skipped (no per-project hook config). Run setup again without --project-hooks to install it globally.`);
+      continue;
+    }
     try {
-      const res = h.install({ home, root, projectHooks: flags.projectHooks && id !== 'hermes' });
+      const res = h.install({ home, root, projectHooks: flags.projectHooks });
       if (res.manual) {
         manual.push(`${h.label}: ${res.manual}`);
         log(`  ⚠ ${h.label}: needs a manual step (see below)`);
@@ -121,7 +125,6 @@ async function setup(argv, {
         log(`  ✔ ${h.label}${res.changed.length ? '' : ' (already up to date)'}`);
       }
       notes.push(...(res.notes || []));
-      if (flags.projectHooks && id === 'hermes') notes.push('Hermes has no per-project hook config; its hooks were installed globally.');
     } catch (err) {
       failed = true;
       log(`  ✖ ${h.label}: ${err.message}`);

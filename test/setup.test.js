@@ -187,6 +187,24 @@ test('remove keeps shared ~/.agents/skills while another harness still uses them
   assert.equal(fs.existsSync(skill), false);
 });
 
+test('--project-hooks never writes outside the repo (global AGENTS.md block, Hermes config)', async () => {
+  const home = tmpdir();
+  const block = '# Mine\n\n<!-- tnj-global-begin -->\nold protocol\n<!-- tnj-global-end -->\n';
+  const agents = write(home, '.config/opencode/AGENTS.md', block);
+  const hermes = write(home, '.hermes/config.yaml', 'model: x\n');
+  const root = makeProject({ tnj: false });
+  const logs = [];
+  await setup(['--all', '--project-hooks', '--project', '--yes'], { home, cwd: root, env: { PATH: '' }, interactive: false, log: m => logs.push(m) });
+  assert.equal(fs.readFileSync(agents, 'utf8'), block, 'legacy global block untouched');
+  assert.equal(fs.readFileSync(hermes, 'utf8'), 'model: x\n', 'hermes config untouched');
+  assert.match(logs.join('\n'), /Hermes Agent: skipped \(no per-project hook config\)/);
+  assert.ok(fs.existsSync(path.join(root, '.opencode', 'plugins', 'tomnjerry.js')));
+  const stray = fs.readdirSync(home).filter(n => n !== '.config' && n !== '.hermes');
+  assert.deepEqual(stray, [], 'no other files in home');
+  assert.equal(fs.readdirSync(path.join(home, '.config', 'opencode')).length, 1);
+  assert.equal(fs.readdirSync(path.join(home, '.hermes')).length, 1);
+});
+
 test('remove never deletes a user file that happens to share the shim name', async () => {
   const home = tmpdir();
   const mine = write(home, '.config/opencode/plugins/tomnjerry.js', 'export const Mine = async () => ({});\n');

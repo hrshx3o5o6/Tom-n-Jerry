@@ -584,7 +584,7 @@ Usage:
       --harness a,b              Pick harnesses (claude, codex, hermes, opencode, pi, gemini, agy); default: detected
       --all                      All supported harnesses
       --project / --no-project   Scaffold .tnj/ here (default: yes inside a repo)
-      --project-hooks            Hooks for this project only (default: all projects)
+      --project-hooks            Hooks for this project only (default: all projects); Hermes is skipped
       --mode advise|enforce|off  Jerry mode for this project (default: advise)
       --yes                      No prompts
   tomnjerry remove [--harness a,b] [--purge]   Remove TNJ hooks and skill copies (--purge deletes .tnj/)

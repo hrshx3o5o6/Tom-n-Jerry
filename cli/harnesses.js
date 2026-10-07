@@ -300,6 +300,7 @@ function stripHermesBlock(text) {
 
 const hermes = {
   id: 'hermes', label: 'Hermes Agent',
+  supportsProjectHooks: false,
   detect: ({ home, env }) => fs.existsSync(path.join(home, '.hermes')) || onPath('hermes', env),
   skillsDirs: ({ home }) => [path.join(home, '.hermes', 'skills')],
   configFile: home => path.join(home, '.hermes', 'config.yaml'),
@@ -383,7 +384,8 @@ function shimHarness({ id, label, detect, shimFile, projectShimFile, exportLine,
       writeWithBackup(fileFor(opts), `${SHIM_MARKER} --harness ${id}\n${exportLine(target)}\n`, changed);
       if (skillsDir) installSkillCopies(skillsDir(opts), changed);
       const out = [...(notes || []), ...(opts.projectHooks && projectNotes ? projectNotes : [])];
-      if (cleanup) out.push(...cleanup(opts, changed));
+      // Project-scoped installs must not touch global files.
+      if (cleanup && !opts.projectHooks) out.push(...cleanup(opts, changed));
       return { changed, notes: out };
     },
     uninstall(opts) {
