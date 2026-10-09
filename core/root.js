@@ -1,30 +1,33 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 
 const PROJECT_DIR_VARS = ['CLAUDE_PROJECT_DIR', 'GEMINI_PROJECT_DIR'];
 const ROOT_MARKERS = ['.tnj', '.git', 'package.json'];
 
-function walkUp(start, marker) {
+// The home directory and everything above it is never a project root: a stray
+// ~/package.json or ~/.git must not turn all of ~ into one project.
+function walkUp(start, marker, home) {
   let dir = path.resolve(start);
   for (;;) {
+    if (dir === home || home.startsWith(dir + path.sep) || dir === path.parse(dir).root) return null;
     if (fs.existsSync(path.join(dir, marker))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) return null;
-    dir = parent;
+    dir = path.dirname(dir);
   }
 }
 
-function findRoot(cwd, env = process.env) {
+function findRoot(cwd, env = process.env, home = os.homedir()) {
   for (const name of PROJECT_DIR_VARS) {
     const value = env[name];
     if (value && fs.existsSync(value)) return path.resolve(value);
   }
   const start = cwd || process.cwd();
+  const homeDir = path.resolve(home);
   for (const marker of ROOT_MARKERS) {
-    const found = walkUp(start, marker);
+    const found = walkUp(start, marker, homeDir);
     if (found) return found;
   }
   return path.resolve(start);

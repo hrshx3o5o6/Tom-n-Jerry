@@ -90,7 +90,7 @@ async function setup(argv, {
     return 1;
   }
 
-  const root = findRoot(cwd, {});
+  const root = findRoot(cwd, {}, home);
   let scaffold = flags.project;
   if (scaffold == null) {
     scaffold = inProject(root)
@@ -141,7 +141,7 @@ async function remove(argv, { home = os.homedir(), cwd = process.cwd(), log = co
   const flags = parseFlags(argv);
   const ids = flags.harness || HARNESSES.map(h => h.id);
   if (!validate(ids, log)) return 1;
-  const root = findRoot(cwd, {});
+  const root = findRoot(cwd, {}, home);
   for (const id of ids) {
     const h = byId(id);
     const { changed } = h.uninstall({ home, root });

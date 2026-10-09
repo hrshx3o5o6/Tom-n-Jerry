@@ -9,6 +9,7 @@ const { setup, remove } = require('../cli/setup');
 const { checkHooks } = require('../cli/doctor');
 const { hookCommand, binPath } = require('../cli/fsutil');
 const { mergeIndex } = require('../cli/scaffold');
+const { findRoot } = require('../core/root');
 const { tmpdir, write, makeProject } = require('./helpers');
 
 const quiet = () => {};
@@ -203,6 +204,31 @@ test('--project-hooks never writes outside the repo (global AGENTS.md block, Her
   assert.deepEqual(stray, [], 'no other files in home');
   assert.equal(fs.readdirSync(path.join(home, '.config', 'opencode')).length, 1);
   assert.equal(fs.readdirSync(path.join(home, '.hermes')).length, 1);
+});
+
+test('a stray ~/package.json never makes the home directory a project (dogfood bug)', async () => {
+  const home = tmpdir();
+  write(home, 'package.json', '{}');
+  const plain = path.join(home, 'Documents', 'optiv');
+  fs.mkdirSync(plain, { recursive: true });
+  assert.equal(findRoot(plain, {}, home), plain, 'folder with no markers is its own root');
+  assert.equal(findRoot(home, {}, home), home);
+
+  const repo = path.join(home, 'code', 'app');
+  fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
+  fs.mkdirSync(path.join(repo, 'src', 'deep'), { recursive: true });
+  assert.equal(findRoot(path.join(repo, 'src', 'deep'), {}, home), repo);
+  fs.mkdirSync(path.join(plain, '.tnj'));
+  fs.mkdirSync(path.join(plain, 'sub'));
+  assert.equal(findRoot(path.join(plain, 'sub'), {}, home), plain, 'finds its own .tnj below home');
+
+  const clean = path.join(home, 'Documents', 'case');
+  fs.mkdirSync(clean);
+  await run(setup, ['--harness', 'claude', '--project-hooks', '--project'], home, clean);
+  assert.ok(fs.existsSync(path.join(clean, '.tnj', 'index.json')));
+  assert.ok(fs.existsSync(path.join(clean, '.claude', 'settings.local.json')));
+  assert.equal(fs.existsSync(path.join(home, '.tnj')), false, 'nothing scaffolded in home');
+  assert.equal(fs.existsSync(path.join(home, '.claude')), false, 'nothing wired in home');
 });
 
 test('remove never deletes a user file that happens to share the shim name', async () => {
