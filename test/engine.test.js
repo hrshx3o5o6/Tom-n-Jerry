@@ -207,3 +207,35 @@ test('old session logs are cleaned up on sessionStart', () => {
   ev(root, 'sessionStart');
   assert.equal(fs.existsSync(old), false);
 });
+
+test('receipt gate: setup and housekeeping commands are not verification (dogfood: 106/109 counted)', () => {
+  const housekeeping = [
+    'mkdir -p scratch/cs2 && cd scratch/cs2 && unzip -q -o "Case Study.zip"',
+    'pdftoppm -r 60 -png -f 1 -l 35 policy.pdf pg',
+    'uv venv --python 3.12 .venv',
+    'uv pip install --python .venv/bin/python pymupdf python-docx',
+    'rm -rf .venv && mkdir pipeline && git add -A',
+  ];
+  for (const cmd of housekeeping) {
+    const root = makeProject();
+    ev(root, 'prompt', { prompt: 'x' });
+    ev(root, 'toolAfter', edit('src/index.js'));
+    ev(root, 'toolAfter', shell(cmd));
+    assert.match(ev(root, 'stop').continue.reason, /Receipt/, cmd);
+  }
+});
+
+test('receipt gate: real runs (tests, builds, scripts, requests) are verification', () => {
+  const verifiers = [
+    'pytest -q', 'uv run pytest tests/', 'python -m pytest', 'python3 pipeline/run.py --limit 3',
+    "python3 -I - <<'EOF'", 'node --check src/limit.js', 'pnpm run build', 'npx vitest run',
+    'cd api && cargo test', 'curl -s localhost:3000/health',
+  ];
+  for (const cmd of verifiers) {
+    const root = makeProject();
+    ev(root, 'prompt', { prompt: 'x' });
+    ev(root, 'toolAfter', edit('src/index.js'));
+    ev(root, 'toolAfter', shell(cmd));
+    assert.deepEqual(ev(root, 'stop'), {}, cmd);
+  }
+});
